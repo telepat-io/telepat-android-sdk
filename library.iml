@@ -89,9 +89,18 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="gson-2.3.1" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.1.1" level="project" />
+    <orderEntry type="library" exported="" name="jackson-coreutils-1.6" level="project" />
     <orderEntry type="library" exported="" name="support-v4-22.1.1" level="project" />
-    <orderEntry type="library" exported="" name="play-services-base-7.3.0" level="project" />
+    <orderEntry type="library" exported="" name="json-patch-1.9" level="project" />
+    <orderEntry type="library" exported="" name="jackson-core-2.2.3" level="project" />
+    <orderEntry type="library" exported="" name="guava-16.0.1" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-22.1.1" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.2.3" level="project" />
+    <orderEntry type="library" exported="" name="msg-simple-1.1" level="project" />
+    <orderEntry type="library" exported="" name="jackson-annotations-2.2.3" level="project" />
+    <orderEntry type="library" exported="" name="btf-1.2" level="project" />
+    <orderEntry type="library" exported="" name="play-services-base-7.3.0" level="project" />
+    <orderEntry type="library" exported="" name="jsr305-2.0.1" level="project" />
     <orderEntry type="library" exported="" name="play-services-gcm-7.3.0" level="project" />
     <orderEntry type="module" module-name="volley" exported="" />
   </component>

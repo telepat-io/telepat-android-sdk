@@ -22,7 +22,7 @@ public class RegisterUserRequest extends GsonRequest<KrakenUser>
 	 */
 	public RegisterUserRequest(final String fbToken, Response.Listener listener, Response.ErrorListener errorListener)
 	{
-		super(Method.POST, KrakenConstants.SERVER_URL, KrakenUser.class, null, listener, errorListener);
+		super(Method.POST, KrakenConstants.ENDPOINT_REGISTER_USER, KrakenUser.class, null, listener, errorListener);
 
 		mFBToken = fbToken;
 	}

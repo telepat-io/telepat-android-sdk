@@ -14,6 +14,7 @@ import com.appscend.library.model.KrakenContext;
 import com.appscend.library.model.KrakenContexts;
 import com.appscend.library.model.KrakenUser;
 import com.appscend.library.networking.GetAllContextsRequest;
+import com.appscend.library.networking.RegisterDeviceRequest;
 import com.appscend.library.networking.RegisterUserRequest;
 import com.appscend.library.networking.VolleyWrapper;
 import com.google.android.gms.common.ConnectionResult;
@@ -65,6 +66,27 @@ public final class Library
 		getServerContexts();
 	}
 
+	private void registerDevice(String regId)
+	{
+		RegisterDeviceRequest request = new RegisterDeviceRequest(regId, new Response.Listener()
+		{
+			@Override
+			public void onResponse(Object response)
+			{
+
+			}
+		}, new Response.ErrorListener()
+		{
+			@Override
+			public void onErrorResponse(VolleyError error)
+			{
+
+			}
+		});
+
+		VolleyWrapper.getInstance(mContext).addRequest(request);
+	}
+
 	private void getServerContexts()
 	{
 		GetAllContextsRequest request = new GetAllContextsRequest(new Response.Listener<KrakenContexts>()
@@ -106,6 +128,10 @@ public final class Library
 			if (TextUtils.isEmpty(regId))
 			{
 				gcmRegisterAsync();
+			}
+			else
+			{
+				registerDevice(regId);
 			}
 		}
 	}
@@ -214,6 +240,7 @@ public final class Library
 						Log.d("GCM", regId);
 
 						storeRegistrationId(regId);
+						registerDevice(regId);
 
 						return regId;
 					}
@@ -289,7 +316,8 @@ public final class Library
 
 			if (now - mMostRecentTimestamp > DISPATCH_TIME_CAP || mPatchCounter >= DISPATCH_COUNT_CAP)
 			{
-				//TODO: send the batch to the backend
+				//TODO: send the batch to the backend and reset the counter
+				mPatchCounter = 0;
 			}
 			else
 			{
