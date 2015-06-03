@@ -1,7 +1,6 @@
 package io.telepat.sdk.networking.transports.gcm;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
@@ -86,8 +85,7 @@ public class GcmRegistrator {
     }
 
     private String getRegistrationId() {
-        final SharedPreferences prefs = getGCMPreferences();
-        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
+        String registrationId = (String) Telepat.getInstance().getDBInstance().getOperationsData(PROPERTY_REG_ID, "", String.class);
         if (registrationId.isEmpty()) {
             Log.i(TelepatConstants.TAG, "Registration not found.");
             return "";
@@ -95,7 +93,7 @@ public class GcmRegistrator {
         // Check if app was updated; if so, it must clear the registration ID
         // since the existing registration ID is not guaranteed to work with
         // the new app version.
-        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
+        int registeredVersion = (int) Telepat.getInstance().getDBInstance().getOperationsData(PROPERTY_APP_VERSION, Integer.MIN_VALUE, Integer.class);
         int currentVersion = TelepatUtilities.getAppVersion(mContext);
         if (registeredVersion != currentVersion) {
             Log.i(TelepatConstants.TAG, "App version changed.");
@@ -108,24 +106,15 @@ public class GcmRegistrator {
 
     /**
      * Stores the registration ID and app versionCode in the application's
-     * {@code SharedPreferences}.
      *
      * @param regId registration ID
      */
     private void storeRegistrationId(String regId)
     {
-        final SharedPreferences prefs = getGCMPreferences();
         int appVersion = TelepatUtilities.getAppVersion(mContext);
         Log.i(TelepatConstants.TAG, "Saving regId on app version " + appVersion);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PROPERTY_REG_ID, regId);
-        editor.putInt(PROPERTY_APP_VERSION, appVersion);
-        editor.apply();
-    }
-
-    private SharedPreferences getGCMPreferences()
-    {
-        return mContext.getSharedPreferences(Telepat.class.getSimpleName(), Context.MODE_PRIVATE);
+        Telepat.getInstance().getDBInstance().setOperationsData(PROPERTY_REG_ID, regId);
+        Telepat.getInstance().getDBInstance().setOperationsData(PROPERTY_APP_VERSION, appVersion);
     }
 
     public void initGcmRegistration()

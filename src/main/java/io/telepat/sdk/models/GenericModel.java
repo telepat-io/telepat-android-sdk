@@ -1,4 +1,4 @@
-package io.telepat.sdk;
+package io.telepat.sdk.models;
 
 /**
  * Created by catalinivan on 09/03/15.

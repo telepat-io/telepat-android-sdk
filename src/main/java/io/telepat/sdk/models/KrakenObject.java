@@ -1,4 +1,4 @@
-package io.telepat.sdk;
+package io.telepat.sdk.models;
 
 import java.security.SecureRandom;
 

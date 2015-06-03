@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.telepat.sdk.models.KrakenObject;
+
 /**
  * Created by catalinivan on 09/03/15.
  */

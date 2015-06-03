@@ -1,4 +1,4 @@
-package io.telepat.sdk;
+package io.telepat.sdk.networking.transports.gcm;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

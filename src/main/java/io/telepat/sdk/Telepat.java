@@ -7,6 +7,8 @@ import java.util.Map;
 
 import io.android.volley.Response;
 import io.android.volley.VolleyError;
+import io.telepat.sdk.data.TelepatInternalDB;
+import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.KrakenContext;
 import io.telepat.sdk.models.KrakenUser;
 import io.telepat.sdk.networking.OctopusApi;
@@ -36,6 +38,7 @@ public final class Telepat
 	private        KrakenUser                     mCurrentUser;
 	private OctopusApi apiClient;
 	private OctopusRequestInterceptor requestInterceptor;
+	private TelepatInternalDB internalDB;
 
 	private Telepat() {	}
 
@@ -49,9 +52,14 @@ public final class Telepat
 		return mInstance;
 	}
 
+	public TelepatInternalDB getDBInstance() {
+		return internalDB;
+	}
+
 	public void initialize(Context context, final String clientApiKey, final String clientAppId)
 	{
 		mContext = context.getApplicationContext();
+		internalDB = new TelepatSnappyDb(context);
 		initHTTPClient(clientApiKey, clientAppId);
 		new GcmRegistrator(mContext).initGcmRegistration();
 		getServerContexts();
