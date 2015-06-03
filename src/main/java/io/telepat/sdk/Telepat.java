@@ -7,8 +7,8 @@ import java.util.Map;
 
 import io.android.volley.Response;
 import io.android.volley.VolleyError;
-import io.telepat.sdk.model.KrakenContext;
-import io.telepat.sdk.model.KrakenUser;
+import io.telepat.sdk.models.KrakenContext;
+import io.telepat.sdk.models.KrakenUser;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.VolleyWrapper;
@@ -16,7 +16,7 @@ import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
 import io.telepat.sdk.networking.requests.RegisterUserRequest;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
 import io.telepat.sdk.networking.transports.gcm.GcmRegistrator;
-import io.telepat.sdk.utilities.KrakenConstants;
+import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatLogger;
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -61,10 +61,10 @@ public final class Telepat
 		requestInterceptor = new OctopusRequestInterceptor(clientApiKey, clientAppId);
 
 		RestAdapter.Builder rBuilder = new RestAdapter.Builder()
-				.setEndpoint(KrakenConstants.SERVER_URL)
+				.setEndpoint(TelepatConstants.SERVER_URL)
 				.setRequestInterceptor(requestInterceptor);
-		if(KrakenConstants.RETROFIT_DEBUG_ENABLED)
-			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL).setLog(new AndroidLog(KrakenConstants.TAG));
+		if(TelepatConstants.RETROFIT_DEBUG_ENABLED)
+			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL).setLog(new AndroidLog(TelepatConstants.TAG));
 
 		RestAdapter restAdapter = rBuilder.build();
 		apiClient = restAdapter.create(OctopusApi.class);

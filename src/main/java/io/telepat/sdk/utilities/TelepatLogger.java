@@ -7,9 +7,9 @@ import android.util.Log;
  */
 public class TelepatLogger {
     public static void log(String message) {
-        Log.d(KrakenConstants.TAG, message);
+        Log.d(TelepatConstants.TAG, message);
     }
     public static void error(String message) {
-        Log.e(KrakenConstants.TAG, message);
+        Log.e(TelepatConstants.TAG, message);
     }
 }

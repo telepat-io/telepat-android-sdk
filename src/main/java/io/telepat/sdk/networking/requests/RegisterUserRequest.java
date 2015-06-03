@@ -2,8 +2,8 @@ package io.telepat.sdk.networking.requests;
 
 import io.android.volley.AuthFailureError;
 import io.android.volley.Response;
-import io.telepat.sdk.utilities.KrakenConstants;
-import io.telepat.sdk.model.KrakenUser;
+import io.telepat.sdk.utilities.TelepatConstants;
+import io.telepat.sdk.models.KrakenUser;
 import io.telepat.sdk.networking.GsonRequest;
 
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public class RegisterUserRequest extends GsonRequest<KrakenUser>
 	 */
 	public RegisterUserRequest(final String fbToken, Response.Listener listener, Response.ErrorListener errorListener)
 	{
-		super(Method.POST, KrakenConstants.ENDPOINT_REGISTER_USER, KrakenUser.class, null, listener, errorListener);
+		super(Method.POST, TelepatConstants.ENDPOINT_REGISTER_USER, KrakenUser.class, null, listener, errorListener);
 
 		mFBToken = fbToken;
 	}
@@ -33,7 +33,7 @@ public class RegisterUserRequest extends GsonRequest<KrakenUser>
 	{
 		HashMap<String, String> params = new HashMap<>(1);
 
-		params.put(KrakenConstants.KEY_USER_FB_TOKEN, mFBToken);
+		params.put(TelepatConstants.KEY_USER_FB_TOKEN, mFBToken);
 
 		return params;
 	}

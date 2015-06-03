@@ -1,4 +1,4 @@
-package io.telepat.sdk.model;
+package io.telepat.sdk.models;
 
 import io.telepat.sdk.KrakenObject;
 

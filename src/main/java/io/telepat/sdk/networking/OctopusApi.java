@@ -1,6 +1,6 @@
 package io.telepat.sdk.networking;
 
-import io.telepat.sdk.model.KrakenContext;
+import io.telepat.sdk.models.KrakenContext;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
 
 import java.util.Map;

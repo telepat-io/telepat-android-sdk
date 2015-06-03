@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import io.telepat.sdk.Telepat;
-import io.telepat.sdk.utilities.KrakenConstants;
+import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatUtilities;
 
 /**
@@ -89,7 +89,7 @@ public class GcmRegistrator {
         final SharedPreferences prefs = getGCMPreferences();
         String registrationId = prefs.getString(PROPERTY_REG_ID, "");
         if (registrationId.isEmpty()) {
-            Log.i(KrakenConstants.TAG, "Registration not found.");
+            Log.i(TelepatConstants.TAG, "Registration not found.");
             return "";
         }
         // Check if app was updated; if so, it must clear the registration ID
@@ -98,11 +98,11 @@ public class GcmRegistrator {
         int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
         int currentVersion = TelepatUtilities.getAppVersion(mContext);
         if (registeredVersion != currentVersion) {
-            Log.i(KrakenConstants.TAG, "App version changed.");
+            Log.i(TelepatConstants.TAG, "App version changed.");
             return "";
         }
 
-        Log.d(KrakenConstants.TAG, "Registration id is: " + registrationId);
+        Log.d(TelepatConstants.TAG, "Registration id is: " + registrationId);
         return registrationId;
     }
 
@@ -116,7 +116,7 @@ public class GcmRegistrator {
     {
         final SharedPreferences prefs = getGCMPreferences();
         int appVersion = TelepatUtilities.getAppVersion(mContext);
-        Log.i(KrakenConstants.TAG, "Saving regId on app version " + appVersion);
+        Log.i(TelepatConstants.TAG, "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(PROPERTY_REG_ID, regId);
         editor.putInt(PROPERTY_APP_VERSION, appVersion);
