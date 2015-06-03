@@ -44,8 +44,7 @@ public final class Telepat
 
 	public static Telepat getInstance()
 	{
-		if (mInstance == null)
-		{
+		if (mInstance == null)	{
 			mInstance = new Telepat();
 		}
 
@@ -62,7 +61,7 @@ public final class Telepat
 		internalDB = new TelepatSnappyDb(context);
 		initHTTPClient(clientApiKey, clientAppId);
 		new GcmRegistrator(mContext).initGcmRegistration();
-		getServerContexts();
+		updateContexts();
 	}
 
 	private void initHTTPClient(String clientApiKey, final String clientAppId) {
@@ -72,38 +71,52 @@ public final class Telepat
 				.setEndpoint(TelepatConstants.SERVER_URL)
 				.setRequestInterceptor(requestInterceptor);
 		if(TelepatConstants.RETROFIT_DEBUG_ENABLED)
-			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL).setLog(new AndroidLog(TelepatConstants.TAG));
+			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL)
+					.setLog(new AndroidLog(TelepatConstants.TAG));
 
 		RestAdapter restAdapter = rBuilder.build();
 		apiClient = restAdapter.create(OctopusApi.class);
 	}
 
-	public void registerDevice(String regId)
+	public void registerDevice(String regId, boolean shouldUpdateBackend)
 	{
-		RegisterDeviceRequest request = new RegisterDeviceRequest(regId);
-		apiClient.registerDevice(request.getParams(), new Callback<RegisterDeviceResponse>() {
-			@Override
-			public void success(RegisterDeviceResponse octopusResponse, retrofit.client.Response response) {
-				TelepatLogger.log("Register device success");
-				if(octopusResponse.status == 200 && octopusResponse.identifier!=null) {
-					requestInterceptor.setUdid(octopusResponse.identifier);
-					TelepatLogger.log("Received Telepat UDID: "+octopusResponse.identifier);
+		String udid = (String) internalDB.getOperationsData(TelepatConstants.UDID_KEY,
+															"",
+															String.class);
+		if(!udid.isEmpty() && !shouldUpdateBackend) return;
+
+		if(udid.isEmpty()) {
+			RegisterDeviceRequest request = new RegisterDeviceRequest(regId);
+			apiClient.registerDevice(request.getParams(), new Callback<RegisterDeviceResponse>() {
+				@Override
+				public void success(RegisterDeviceResponse octopusResponse,
+									retrofit.client.Response response) {
+					TelepatLogger.log("Register device success");
+					if (octopusResponse.status == 200 && octopusResponse.identifier != null) {
+						requestInterceptor.setUdid(octopusResponse.identifier);
+						internalDB.setOperationsData(TelepatConstants.UDID_KEY,
+								octopusResponse.identifier);
+						TelepatLogger.log("Received Telepat UDID: " + octopusResponse.identifier);
+					}
 				}
-			}
 
-			@Override
-			public void failure(RetrofitError error) {
-				TelepatLogger.log("Register device failure.");
+				@Override
+				public void failure(RetrofitError error) {
+					TelepatLogger.log("Register device failure.");
 
-			}
-		});
+				}
+			});
+		} else {
+			//TODO send update
+		}
 	}
 
-	private void getServerContexts()
+	private void updateContexts()
 	{
 		apiClient.updateContexts(new Callback<Map<Integer, KrakenContext>>() {
 			@Override
-			public void success(Map<Integer, KrakenContext> contextMap, retrofit.client.Response response) {
+			public void success(Map<Integer, KrakenContext> contextMap,
+								retrofit.client.Response response) {
 				if(contextMap == null) return;
 				TelepatLogger.log("Retrieved"+contextMap.keySet().size()+"contexts");
 				if (mServerContexts == null) mServerContexts = new HashMap<>();
@@ -113,7 +126,7 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.log("Failed req"+ error.getMessage());
+				TelepatLogger.log("Failed to get contexts"+ error.getMessage());
 			}
 		});
 	}

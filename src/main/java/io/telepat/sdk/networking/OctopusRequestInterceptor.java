@@ -1,5 +1,7 @@
 package io.telepat.sdk.networking;
 
+import io.telepat.sdk.Telepat;
+import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatUtilities;
 
 import java.security.MessageDigest;
@@ -25,6 +27,8 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
         if(apiKey != null) {
             this.apiKeyHash = TelepatUtilities.sha256(apiKey);
         }
+        this.udid = (String) Telepat.getInstance().getDBInstance().getOperationsData(TelepatConstants.UDID_KEY, "", String.class);
+
     }
 
     @Override

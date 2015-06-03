@@ -12,6 +12,8 @@ public final class TelepatConstants
 	public static final String KEY_USER_FB_TOKEN        = "access_token";
 	public static final  String TAG                  = "TelepatSDK";
 
+	public static final String UDID_KEY = "udid";
+
 	private TelepatConstants()
 	{
 	}
