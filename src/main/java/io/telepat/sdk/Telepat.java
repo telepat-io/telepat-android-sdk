@@ -17,7 +17,7 @@ import io.telepat.sdk.networking.VolleyWrapper;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
 import io.telepat.sdk.networking.requests.RegisterUserRequest;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
-import io.telepat.sdk.networking.transports.gcm.GcmRegistrator;
+import io.telepat.sdk.networking.transports.gcm.GcmRegistrar;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatLogger;
 import retrofit.Callback;
@@ -55,12 +55,16 @@ public final class Telepat
 		return internalDB;
 	}
 
-	public void initialize(Context context, final String clientApiKey, final String clientAppId)
+	public void initialize(Context context,
+						   final String clientApiKey,
+						   final String clientAppId,
+						   String senderId)
 	{
 		mContext = context.getApplicationContext();
 		internalDB = new TelepatSnappyDb(context);
+		TelepatConstants.SENDER_ID = senderId;
 		initHTTPClient(clientApiKey, clientAppId);
-		new GcmRegistrator(mContext).initGcmRegistration();
+		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
 	}
 

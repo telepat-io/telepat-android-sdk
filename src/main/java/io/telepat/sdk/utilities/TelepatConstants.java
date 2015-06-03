@@ -13,6 +13,7 @@ public final class TelepatConstants
 	public static final  String TAG                  = "TelepatSDK";
 
 	public static final String UDID_KEY = "udid";
+	public static String SENDER_ID            = "361851333269";
 
 	private TelepatConstants()
 	{

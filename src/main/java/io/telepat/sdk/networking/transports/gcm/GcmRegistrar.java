@@ -14,25 +14,40 @@ import java.util.Random;
 
 import io.telepat.sdk.Telepat;
 import io.telepat.sdk.utilities.TelepatConstants;
+import io.telepat.sdk.utilities.TelepatLogger;
 import io.telepat.sdk.utilities.TelepatUtilities;
 
 /**
  * Created by Andrei Marinescu on 03.06.2015.
  * GCM Token Registration
  */
-public class GcmRegistrator {
+public class GcmRegistrar {
     public static final  String PROPERTY_REG_ID      = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
-    private static final String SENDER_ID            = "117236164056";
     private static final int    MAX_ATTEMPTS         = 3;
     private Context mContext;
 
-    public GcmRegistrator(Context mContext) {
+    public GcmRegistrar(Context mContext) {
         this.mContext = mContext;
     }
 
-    private void gcmRegisterAsync()
-    {
+    public void initGcmRegistration() {
+        if (checkPlayServices())
+        {
+            String regId = getRegistrationId();
+
+            if (TextUtils.isEmpty(regId))
+            {
+                gcmRegisterAsync();
+            }
+            else
+            {
+                Telepat.getInstance().registerDevice(regId, false);
+            }
+        }
+    }
+
+    private void gcmRegisterAsync() {
         new AsyncTask<Object, Object, Object>()
         {
             @Override
@@ -44,33 +59,30 @@ public class GcmRegistrator {
                 {
                     try
                     {
-                        String regId = gcm.register(SENDER_ID);
-                        Log.d("GCM", regId);
+                        String regId = gcm.register(TelepatConstants.SENDER_ID);
+                        TelepatLogger.log(regId);
 
                         storeRegistrationId(regId);
-                        Telepat.getInstance().registerDevice(regId);
+                        Telepat.getInstance().registerDevice(regId, true);
 
                         return regId;
                     }
                     catch (IOException e)
                     {
                         e.printStackTrace();
-                        Log.e("GCM", e.getMessage());
+                        TelepatLogger.error(e.getMessage());
 
-                        if (i == MAX_ATTEMPTS - 1)
-                        {
+                        if (i == MAX_ATTEMPTS - 1) {
                             break;
                         }
 
-                        try
-                        {
-                            Log.d("GCM", "Sleeping for " + backoff + " ms before retry");
+                        try {
+                            TelepatLogger.log("Sleeping for " + backoff + " ms before retry");
                             Thread.sleep(backoff);
                         }
-                        catch (InterruptedException e1)
-                        {
+                        catch (InterruptedException e1) {
                             // Activity finished before we complete - exit.
-                            Log.d("GCM", "Thread interrupted: abort remaining retries!");
+                            TelepatLogger.log("Thread interrupted: abort remaining retries!");
                             Thread.currentThread().interrupt();
                             return "";
                         }
@@ -84,8 +96,16 @@ public class GcmRegistrator {
         }.execute(null, null, null);
     }
 
+    /**
+     * Retrieve the GCM registration ID from internal storage.
+     * @return The registration ID if found, or an empty string if the app was updated
+     * or no registration ID.
+     */
     private String getRegistrationId() {
-        String registrationId = (String) Telepat.getInstance().getDBInstance().getOperationsData(PROPERTY_REG_ID, "", String.class);
+        String registrationId = (String) Telepat.getInstance()
+                .getDBInstance()
+                .getOperationsData(PROPERTY_REG_ID, "", String.class);
+
         if (registrationId.isEmpty()) {
             Log.i(TelepatConstants.TAG, "Registration not found.");
             return "";
@@ -93,7 +113,9 @@ public class GcmRegistrator {
         // Check if app was updated; if so, it must clear the registration ID
         // since the existing registration ID is not guaranteed to work with
         // the new app version.
-        int registeredVersion = (int) Telepat.getInstance().getDBInstance().getOperationsData(PROPERTY_APP_VERSION, Integer.MIN_VALUE, Integer.class);
+        int registeredVersion = (int) Telepat.getInstance()
+                .getDBInstance()
+                .getOperationsData(PROPERTY_APP_VERSION, Integer.MIN_VALUE, Integer.class);
         int currentVersion = TelepatUtilities.getAppVersion(mContext);
         if (registeredVersion != currentVersion) {
             Log.i(TelepatConstants.TAG, "App version changed.");
@@ -117,23 +139,6 @@ public class GcmRegistrator {
         Telepat.getInstance().getDBInstance().setOperationsData(PROPERTY_APP_VERSION, appVersion);
     }
 
-    public void initGcmRegistration()
-    {
-        if (checkPlayServices())
-        {
-            String regId = getRegistrationId();
-
-            if (TextUtils.isEmpty(regId))
-            {
-                gcmRegisterAsync();
-            }
-            else
-            {
-                Telepat.getInstance().registerDevice(regId);
-            }
-        }
-    }
-
     /**
      * Check the device to make sure it has the Google Play Services APK. If
      * it doesn't, display a dialog that allows users to download the APK from
@@ -141,7 +146,8 @@ public class GcmRegistrator {
      */
     private boolean checkPlayServices()
     {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(mContext.getApplicationContext());
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(
+                mContext.getApplicationContext());
         return resultCode == ConnectionResult.SUCCESS;
     }
 }
