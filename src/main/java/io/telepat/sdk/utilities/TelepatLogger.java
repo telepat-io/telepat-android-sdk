@@ -9,4 +9,7 @@ public class TelepatLogger {
     public static void log(String message) {
         Log.d(KrakenConstants.TAG, message);
     }
+    public static void error(String message) {
+        Log.e(KrakenConstants.TAG, message);
+    }
 }

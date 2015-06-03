@@ -1,16 +1,19 @@
 package io.telepat.sdk.utilities;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+
 import org.apache.http.protocol.HTTP;
 
-import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.security.SignatureException;
 import java.util.Random;
 
 /**
  * Created by catalinivan on 24/03/15.
+ * Telepat SDK Utils class
  */
-public class KrakenUtilities
+public class TelepatUtilities
 {
 	private static Random mRandom = new Random();
 
@@ -22,14 +25,9 @@ public class KrakenUtilities
 			byte[] hash = digest.digest(toHash.getBytes(HTTP.UTF_8));
 			StringBuilder hexString = new StringBuilder();
 
-			for (int i = 0; i < hash.length; i++)
-			{
-//				Log.d("SHA-256", Integer.toBinaryString(hash[i]));
-//				Log.d("SHA-256", Integer.toBinaryString(0xff & hash[i]));
-//				Log.d("SHA-256", String.format("hash[i] = %d   0xff & hash[i] = %d", hash[i], 0xff & hash[i]));
-				String hex = Integer.toHexString(0xff & hash[i]);
-				if (hex.length() == 1)
-				{
+			for (byte aHash : hash) {
+				String hex = Integer.toHexString(0xff & aHash);
+				if (hex.length() == 1) {
 					hexString.append('0');
 				}
 				hexString.append(hex);
@@ -48,7 +46,7 @@ public class KrakenUtilities
 		return mRandom;
 	}
 
-	/*
+/*
  * Copyright 2012 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,24 +99,20 @@ public class KrakenUtilities
 	}
 	/* END Google I/O code */
 
-	public String sha256Digest (String data) throws SignatureException {
-		return getDigest("SHA-256", data, true);
-	}
-
-	private String getDigest(String algorithm, String data, boolean toLower)
-			throws SignatureException {
-		try {
-			MessageDigest mac = MessageDigest.getInstance(algorithm);
-			mac.update(data.getBytes("UTF-8"));
-			return toLower ?
-					toHex(mac.digest()).toLowerCase() : toHex(mac.digest());
-		} catch (Exception e) {
-			throw new SignatureException(e);
+	/**
+	 * @return Application's version code from the {@code PackageManager}.
+	 */
+	public static int getAppVersion(Context mContext)
+	{
+		try
+		{
+			PackageInfo packageInfo = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+			return packageInfo.versionCode;
 		}
-	}
-
-	private String toHex(byte[] bytes) {
-		BigInteger bi = new BigInteger(1, bytes);
-		return String.format("%0" + (bytes.length << 1) + "X", bi);
+		catch (PackageManager.NameNotFoundException e)
+		{
+			// should never happen
+			throw new RuntimeException("Could not get package name: " + e);
+		}
 	}
 }

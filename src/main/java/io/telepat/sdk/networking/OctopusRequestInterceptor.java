@@ -1,6 +1,6 @@
 package io.telepat.sdk.networking;
 
-import io.telepat.sdk.utilities.KrakenUtilities;
+import io.telepat.sdk.utilities.TelepatUtilities;
 
 import java.security.MessageDigest;
 
@@ -23,7 +23,7 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
         this.apiKey = apiKey;
         MessageDigest digest;
         if(apiKey != null) {
-            this.apiKeyHash = KrakenUtilities.sha256(apiKey);
+            this.apiKeyHash = TelepatUtilities.sha256(apiKey);
         }
     }
 

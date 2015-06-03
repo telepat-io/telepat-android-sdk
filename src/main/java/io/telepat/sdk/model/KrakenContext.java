@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 /**
  * Created by catalinivan on 17/03/15.
+ * Model class for Telepat Contexts
  */
 public class KrakenContext
 {
@@ -61,8 +62,7 @@ public class KrakenContext
 		this.state = state;
 	}
 
-	public HashMap<String, Object> getMeta()
-	{
+	public HashMap<String, Object> getMeta() {
 		return meta;
 	}
 
