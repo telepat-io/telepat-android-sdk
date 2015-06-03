@@ -1,12 +1,8 @@
 package io.telepat.sdk.networking;
 
 import io.telepat.sdk.Telepat;
-import io.telepat.sdk.utilities.FacebookTokenException;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatUtilities;
-
-import java.security.MessageDigest;
-
 import retrofit.RequestInterceptor;
 
 /**
@@ -37,7 +33,7 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
         if(System.currentTimeMillis() - authTokenTs < TelepatConstants.JWT_MAX_AGE) {
             this.authorizationToken = (String) Telepat.getInstance()
                     .getDBInstance()
-                    .getOperationsData(TelepatConstants.UDID_KEY, null, String.class);
+                    .getOperationsData(TelepatConstants.JWT_KEY, null, String.class);
         }
 
     }

@@ -22,6 +22,7 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
+import retrofit.client.Response;
 
 /**
  * Created by catalinivan on 10/03/15.
@@ -148,6 +149,22 @@ public final class Telepat
 			@Override
 			public void failure(RetrofitError error) {
 				TelepatLogger.error("user login failed");
+			}
+		});
+	}
+
+	public void logout()
+	{
+		apiClient.logout(new HashMap<String, String>(), new Callback<HashMap<String, Object>>() {
+			@Override
+			public void success(HashMap<String, Object> userLogoutResponse, retrofit.client.Response response) {
+				TelepatLogger.log("Logout successful");
+				requestInterceptor.setAuthorizationToken(null);
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				TelepatLogger.error("user logout failed - "+error.getMessage());
 			}
 		});
 	}
