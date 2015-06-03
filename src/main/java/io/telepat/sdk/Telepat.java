@@ -5,18 +5,16 @@ import android.content.Context;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.android.volley.Response;
-import io.android.volley.VolleyError;
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.KrakenContext;
 import io.telepat.sdk.models.KrakenUser;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
-import io.telepat.sdk.networking.VolleyWrapper;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
 import io.telepat.sdk.networking.requests.RegisterUserRequest;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
+import io.telepat.sdk.networking.responses.UserLoginResponse;
 import io.telepat.sdk.networking.transports.gcm.GcmRegistrar;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatLogger;
@@ -122,7 +120,7 @@ public final class Telepat
 			public void success(Map<Integer, KrakenContext> contextMap,
 								retrofit.client.Response response) {
 				if(contextMap == null) return;
-				TelepatLogger.log("Retrieved"+contextMap.keySet().size()+"contexts");
+				TelepatLogger.log("Retrieved "+contextMap.keySet().size()+" contexts");
 				if (mServerContexts == null) mServerContexts = new HashMap<>();
 				for(Integer ctxId : contextMap.keySet())
 					mServerContexts.put(ctxId, contextMap.get(ctxId));
@@ -135,25 +133,23 @@ public final class Telepat
 		});
 	}
 
-	public void registerUser(final String fbToken)
+	public void login(final String fbToken)
 	{
-		RegisterUserRequest request = new RegisterUserRequest(fbToken, new Response.Listener<KrakenUser>()
-		{
+		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
+		apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<UserLoginResponse>() {
 			@Override
-			public void onResponse(KrakenUser response)
-			{
-				//TODO: should we notify the client?
+			public void success(UserLoginResponse userLoginResponse, retrofit.client.Response response) {
+				TelepatLogger.log("Received JWT token");
+				internalDB.setOperationsData(TelepatConstants.JWT_KEY, userLoginResponse.token);
+				internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+				requestInterceptor.setAuthorizationToken(userLoginResponse.token);
 			}
-		}, new Response.ErrorListener()
-		{
+
 			@Override
-			public void onErrorResponse(VolleyError error)
-			{
-				TelepatLogger.error(error.getMessage());
+			public void failure(RetrofitError error) {
+				TelepatLogger.error("user login failed");
 			}
 		});
-
-		VolleyWrapper.getInstance(mContext).addRequest(request);
 	}
 
 	public void queuePatch()

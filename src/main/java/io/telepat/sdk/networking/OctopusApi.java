@@ -5,6 +5,7 @@ import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
 
 import java.util.Map;
 
+import io.telepat.sdk.networking.responses.UserLoginResponse;
 import retrofit.Callback;
 import retrofit.http.Body;
 import retrofit.http.POST;
@@ -20,4 +21,9 @@ public interface OctopusApi {
     @POST("/context/all")
     void updateContexts(Callback<Map<Integer,KrakenContext>> cb);
 
+    @POST("/user/login")
+    void loginAsync(@Body Map<String, String> body, Callback<UserLoginResponse> cb);
+
+    @POST("/user/login")
+    UserLoginResponse login(@Body Map<String, String> body);
 }

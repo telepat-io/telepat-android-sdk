@@ -1,39 +1,23 @@
 package io.telepat.sdk.networking.requests;
 
-import io.android.volley.AuthFailureError;
-import io.android.volley.Response;
-import io.telepat.sdk.utilities.TelepatConstants;
-import io.telepat.sdk.models.KrakenUser;
-import io.telepat.sdk.networking.GsonRequest;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by catalinivan on 18/03/15.
+ * Request formatting class for user/login
  */
-public class RegisterUserRequest extends GsonRequest<KrakenUser>
+public class RegisterUserRequest
 {
+	public static final String KEY_USER_FB_TOKEN = "access_token";
 	private String mFBToken;
-	/**
-	 * Make a GET request and return a parsed object from JSON.
-	 *
-	 * @param listener
-	 * @param errorListener
-	 */
-	public RegisterUserRequest(final String fbToken, Response.Listener listener, Response.ErrorListener errorListener)
-	{
-		super(Method.POST, TelepatConstants.ENDPOINT_REGISTER_USER, KrakenUser.class, null, listener, errorListener);
 
-		mFBToken = fbToken;
-	}
+	public RegisterUserRequest(String fbToken) { mFBToken = fbToken; }
 
-	@Override
-	protected Map<String, String> getParams() throws AuthFailureError
-	{
+	public Map<String, String> getParams() {
 		HashMap<String, String> params = new HashMap<>(1);
 
-		params.put(TelepatConstants.KEY_USER_FB_TOKEN, mFBToken);
+		params.put(KEY_USER_FB_TOKEN, mFBToken);
 
 		return params;
 	}

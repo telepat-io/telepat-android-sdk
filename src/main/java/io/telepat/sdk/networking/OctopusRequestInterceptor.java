@@ -1,6 +1,7 @@
 package io.telepat.sdk.networking;
 
 import io.telepat.sdk.Telepat;
+import io.telepat.sdk.utilities.FacebookTokenException;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatUtilities;
 
@@ -18,16 +19,26 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
     private String apiKeyHash;
 
     private String udid;
+
     private String authorizationToken;
 
     public OctopusRequestInterceptor(String apiKey, String appId) {
         this.appId = appId;
         this.apiKey = apiKey;
-        MessageDigest digest;
         if(apiKey != null) {
             this.apiKeyHash = TelepatUtilities.sha256(apiKey);
         }
-        this.udid = (String) Telepat.getInstance().getDBInstance().getOperationsData(TelepatConstants.UDID_KEY, "", String.class);
+        this.udid = (String) Telepat.getInstance()
+                .getDBInstance()
+                .getOperationsData(TelepatConstants.UDID_KEY, "", String.class);
+        Long authTokenTs = (Long) Telepat.getInstance()
+                .getDBInstance()
+                .getOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, 0, Long.class);
+        if(System.currentTimeMillis() - authTokenTs < TelepatConstants.JWT_MAX_AGE) {
+            this.authorizationToken = (String) Telepat.getInstance()
+                    .getDBInstance()
+                    .getOperationsData(TelepatConstants.UDID_KEY, null, String.class);
+        }
 
     }
 
@@ -38,6 +49,9 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
         if(appId!=null) { request.addHeader("X-BLGREQ-APPID", appId); }
         if(udid!=null) { request.addHeader("X-BLGREQ-UDID", udid); }
         else { request.addHeader("X-BLGREQ-UDID",""); }
+        if(authorizationToken!=null) {
+            request.addHeader("Authorization","Bearer "+authorizationToken);
+        }
     }
 
     public String getAppId() {
@@ -62,5 +76,13 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
 
     public void setUdid(String udid) {
         this.udid = udid;
+    }
+
+    public String getAuthorizationToken() {
+        return authorizationToken;
+    }
+
+    public void setAuthorizationToken(String authorizationToken) {
+        this.authorizationToken = authorizationToken;
     }
 }
