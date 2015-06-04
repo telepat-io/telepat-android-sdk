@@ -3,7 +3,7 @@ package io.telepat.sdk.models;
 import java.security.SecureRandom;
 
 /**
- * Created by catalinivan on 16/03/15.
+ * Created by catalinivan, Andrei Marinescu on 16/03/15.
  */
 public class KrakenObject extends Object
 {

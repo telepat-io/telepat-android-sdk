@@ -3,7 +3,7 @@ package io.telepat.sdk.models;
 import java.util.HashMap;
 
 /**
- * Created by catalinivan on 17/03/15.
+ * Created by catalinivan, Andrei Marinescu on 17/03/15.
  * Model class for Telepat Contexts
  */
 public class KrakenContext

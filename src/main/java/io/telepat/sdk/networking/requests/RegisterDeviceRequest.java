@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by catalinivan on 27/05/15.
+ * Created by Andrei Marinescu on 2/06/15.
+ * Request generator for device registering
  */
 public class RegisterDeviceRequest
 {

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by catalinivan on 18/03/15.
+ * Created by catalinivan, Andrei Marinescu on 18/03/15.
  * Request formatting class for user/login
  */
 public class RegisterUserRequest

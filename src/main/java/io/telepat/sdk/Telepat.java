@@ -22,7 +22,6 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
-import retrofit.client.Response;
 
 /**
  * Created by catalinivan on 10/03/15.
@@ -61,7 +60,7 @@ public final class Telepat
 	{
 		mContext = context.getApplicationContext();
 		internalDB = new TelepatSnappyDb(context);
-		TelepatConstants.SENDER_ID = senderId;
+		TelepatConstants.GCM_SENDER_ID = senderId;
 		initHTTPClient(clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
@@ -71,7 +70,7 @@ public final class Telepat
 		requestInterceptor = new OctopusRequestInterceptor(clientApiKey, clientAppId);
 
 		RestAdapter.Builder rBuilder = new RestAdapter.Builder()
-				.setEndpoint(TelepatConstants.SERVER_URL)
+				.setEndpoint(TelepatConstants.TELEPAT_ENDPOINT)
 				.setRequestInterceptor(requestInterceptor);
 		if(TelepatConstants.RETROFIT_DEBUG_ENABLED)
 			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL)

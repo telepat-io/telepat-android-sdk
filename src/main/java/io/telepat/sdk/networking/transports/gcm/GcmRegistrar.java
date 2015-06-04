@@ -59,7 +59,7 @@ public class GcmRegistrar {
                 {
                     try
                     {
-                        String regId = gcm.register(TelepatConstants.SENDER_ID);
+                        String regId = gcm.register(TelepatConstants.GCM_SENDER_ID);
                         TelepatLogger.log(regId);
 
                         storeRegistrationId(regId);
