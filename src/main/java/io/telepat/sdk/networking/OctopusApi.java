@@ -31,4 +31,10 @@ public interface OctopusApi {
 
     @POST("/user/logout")
     void logout(@Body Map<String, String> body, Callback<HashMap<String,Object>> cb);
+
+    @POST("/object/subscribe")
+    void subscribe(@Body Map<String, Object> body, Callback<HashMap<Integer, String>> cb);
+
+    @POST("/object/unsubscribe")
+    void unsubscribe(@Body Map<String, Object> body, Callback<HashMap<Integer, String>> cb);
 }

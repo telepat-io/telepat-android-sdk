@@ -4,11 +4,14 @@ import android.content.Context;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
+import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.KrakenContext;
 import io.telepat.sdk.models.KrakenUser;
+import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
@@ -37,6 +40,7 @@ public final class Telepat
 	private OctopusApi apiClient;
 	private OctopusRequestInterceptor requestInterceptor;
 	private TelepatInternalDB internalDB;
+	private CopyOnWriteArrayList<Channel> subscriptions = new CopyOnWriteArrayList<>();
 
 	private Telepat() {	}
 
@@ -52,6 +56,8 @@ public final class Telepat
 	public TelepatInternalDB getDBInstance() {
 		return internalDB;
 	}
+
+	public OctopusApi getAPIInstance() { return apiClient; }
 
 	public void initialize(Context context,
 						   final String clientApiKey,
@@ -168,33 +174,54 @@ public final class Telepat
 		});
 	}
 
-	public void queuePatch()
-	{
-
+	public Channel subscribe(KrakenContext context, String modelName, OnChannelEventListener listener, Class type) {
+		Channel channel = new Channel(context, modelName, listener, type);
+		subscriptions.add(channel);
+		return channel;
+//		var channel = new Channel(API, log, error, context, channel);
+//
+//		subscriptions.push(channel);
+//		if (onUpdate !== undefined) {
+//			channel.on("update", onUpdate);
+//		}
+//		channel.on("_unsubscribe", function () {
+//			var index = subscriptions.indexOf(channel);
+//			if (index > -1) {
+//				subscriptions.splice(index, 1);
+//			}
+//		});
+//		return channel;
+//	}
 	}
 
-	public class PatchDispatcher
-	{
-		private static final int DISPATCH_TIME_CAP  = 100;
-		private static final int DISPATCH_COUNT_CAP = 10;
+	public Map<Integer, KrakenContext> getContexts() { return mServerContexts; }
 
-		private long mMostRecentTimestamp;
-		private int  mPatchCounter;
-
-		public void queuePatch()
-		{
-			long now = System.nanoTime();
-
-			if (now - mMostRecentTimestamp > DISPATCH_TIME_CAP || mPatchCounter >= DISPATCH_COUNT_CAP)
-			{
-				//TODO: send the batch to the backend and reset the counter
-				mPatchCounter = 0;
-			}
-			else
-			{
-				mMostRecentTimestamp = now;
-				mPatchCounter++;
-			}
-		}
-	}
+//	public void queuePatch()
+//	{
+//
+//	}
+//
+//	public class PatchDispatcher
+//	{
+//		private static final int DISPATCH_TIME_CAP  = 100;
+//		private static final int DISPATCH_COUNT_CAP = 10;
+//
+//		private long mMostRecentTimestamp;
+//		private int  mPatchCounter;
+//
+//		public void queuePatch()
+//		{
+//			long now = System.nanoTime();
+//
+//			if (now - mMostRecentTimestamp > DISPATCH_TIME_CAP || mPatchCounter >= DISPATCH_COUNT_CAP)
+//			{
+//				mPatchCounter = 0;
+//			}
+//			else
+//			{
+//				mMostRecentTimestamp = now;
+//				mPatchCounter++;
+//			}
+//		}
+//	}
 }

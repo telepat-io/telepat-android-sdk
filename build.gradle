@@ -33,5 +33,6 @@ dependencies {
     compile 'com.github.fge:json-patch:1.9'
     compile 'com.snappydb:snappydb-lib:0.5.0'
     compile 'com.esotericsoftware.kryo:kryo:2.24.0'
+    compile 'com.github.nkzawa:socket.io-client:0.5.0'
     compile project(':volley')
 }

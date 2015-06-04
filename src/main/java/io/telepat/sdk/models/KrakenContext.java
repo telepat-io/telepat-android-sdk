@@ -13,13 +13,14 @@ public class KrakenContext
 	private long   endTime;
 	private int    state;
 	private int		application_id;
+	private int		id;
 	private String name;
 
 	private HashMap<String, Object> meta;
 
-	public String getId()
+	public int getId()
 	{
-		return "";
+		return id;
 	}
 
 	public String getType()
