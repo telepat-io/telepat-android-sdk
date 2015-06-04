@@ -28,11 +28,9 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:2.0.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.google.code.gson:gson:2.3.1'
-    //    compile 'com.google.android.gms:play-services-base:7.3+'
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.github.fge:json-patch:1.9'
     compile 'com.snappydb:snappydb-lib:0.5.0'
     compile 'com.esotericsoftware.kryo:kryo:2.24.0'
     compile 'com.github.nkzawa:socket.io-client:0.5.0'
-    compile project(':volley')
 }
