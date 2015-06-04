@@ -10,7 +10,6 @@ import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.KrakenContext;
-import io.telepat.sdk.models.KrakenUser;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
@@ -36,7 +35,6 @@ public final class Telepat
 	private static Telepat mInstance;
 	private        Context                        mContext;
 	private        HashMap<Integer, KrakenContext> mServerContexts;
-	private        KrakenUser                     mCurrentUser;
 	private OctopusApi apiClient;
 	private OctopusRequestInterceptor requestInterceptor;
 	private TelepatInternalDB internalDB;

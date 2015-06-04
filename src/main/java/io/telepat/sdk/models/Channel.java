@@ -12,11 +12,12 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 /**
- * Created by catalinivan on 09/03/15.
+ * Created by Andrei Marinescu, catalinivan on 09/03/15.
+ * Telepat Channel model
  */
 public class Channel
 {
-	private HashMap<String, KrakenObject> mObjects;
+//	private HashMap<String, KrakenObject> mObjects;
 	private String                  mChannelName;
 	private ArrayList<String>       mFilters;
 	private OnChannelEventListener mChannelEventListener;
@@ -190,36 +191,36 @@ public class Channel
 		mChannelEventListener = listener;
 	}
 
-	protected void addObject(KrakenObject toAdd)
-	{
-		if (mObjects == null)
-		{
-			mObjects = new HashMap<>();
-		}
-
-		mObjects.put(toAdd.getId(), toAdd);
-
-		if (mChannelEventListener != null)
-		{
-			mChannelEventListener.onObjectAdded(toAdd);
-		}
-	}
-
-	protected void removeObject(KrakenObject toRemove)
-	{
-		mObjects.remove(toRemove.getId());
-
-		if (mChannelEventListener != null)
-		{
-			mChannelEventListener.onObjectRemoved(toRemove);
-		}
-	}
-
-	protected void modifyObject(KrakenObject target, KrakenObject source)
-	{
-		KrakenObject objToModify = mObjects.get(target.getId());
-
-		//TODO: apply the patch somehow
-	}
+//	protected void addObject(KrakenObject toAdd)
+//	{
+//		if (mObjects == null)
+//		{
+//			mObjects = new HashMap<>();
+//		}
+//
+//		mObjects.put(toAdd.getId(), toAdd);
+//
+//		if (mChannelEventListener != null)
+//		{
+//			mChannelEventListener.onObjectAdded(toAdd);
+//		}
+//	}
+//
+//	protected void removeObject(KrakenObject toRemove)
+//	{
+//		mObjects.remove(toRemove.getId());
+//
+//		if (mChannelEventListener != null)
+//		{
+//			mChannelEventListener.onObjectRemoved(toRemove);
+//		}
+//	}
+//
+//	protected void modifyObject(KrakenObject target, KrakenObject source)
+//	{
+//		KrakenObject objToModify = mObjects.get(target.getId());
+//
+//		//TODO: apply the patch somehow
+//	}
 
 }
