@@ -1,6 +1,8 @@
 package io.telepat.sdk.networking;
 
-import io.telepat.sdk.models.KrakenContext;
+import com.google.gson.JsonElement;
+
+import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
 
 import java.util.HashMap;
@@ -21,7 +23,7 @@ public interface OctopusApi {
     void registerDevice(@Body Map<String, Object> body, Callback<RegisterDeviceResponse> cb);
 
     @GET("/context/all")
-    void updateContexts(Callback<Map<Integer,KrakenContext>> cb);
+    void updateContexts(Callback<Map<Integer,TelepatContext>> cb);
 
     @POST("/user/login")
     void loginAsync(@Body Map<String, String> body, Callback<UserLoginResponse> cb);
@@ -33,8 +35,11 @@ public interface OctopusApi {
     void logout(@Body Map<String, String> body, Callback<HashMap<String,Object>> cb);
 
     @POST("/object/subscribe")
-    void subscribe(@Body Map<String, Object> body, Callback<HashMap<Integer, String>> cb);
+    void subscribe(@Body Map<String, Object> body, Callback<HashMap<String, JsonElement>> cb);
 
     @POST("/object/unsubscribe")
     void unsubscribe(@Body Map<String, Object> body, Callback<HashMap<Integer, String>> cb);
+
+    @POST("/object/create")
+    void create(@Body Map<String, Object> body, Callback<String> cb);
 }

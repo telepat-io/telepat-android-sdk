@@ -6,7 +6,7 @@ import java.util.HashMap;
  * Created by catalinivan, Andrei Marinescu on 17/03/15.
  * Model class for Telepat Contexts
  */
-public class KrakenContext
+public class TelepatContext
 {
 	private String type;
 	private long   startTime;

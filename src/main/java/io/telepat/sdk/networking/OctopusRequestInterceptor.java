@@ -29,7 +29,7 @@ public class OctopusRequestInterceptor implements RequestInterceptor{
                 .getOperationsData(TelepatConstants.UDID_KEY, "", String.class);
         Long authTokenTs = (Long) Telepat.getInstance()
                 .getDBInstance()
-                .getOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, 0, Long.class);
+                .getOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, 0L, Long.class);
         if(System.currentTimeMillis() - authTokenTs < TelepatConstants.JWT_MAX_AGE) {
             this.authorizationToken = (String) Telepat.getInstance()
                     .getDBInstance()

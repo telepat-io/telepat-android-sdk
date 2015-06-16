@@ -1,7 +1,8 @@
 package io.telepat.sdk.models;
 
 /**
- * Created by catalinivan on 16/03/15.
+ * Created by catalinivan, Andrei Marinescu on 16/03/15.
+ * Interface of object modification callbacks
  */
 public interface OnChannelEventListener
 {
@@ -10,4 +11,6 @@ public interface OnChannelEventListener
 	void onObjectRemoved(Object toRemove);
 
 	void onObjectModified(Object target, Object newValue);
+
+	void onError(Integer statusCode, String message);
 }

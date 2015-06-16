@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
-import io.telepat.sdk.models.KrakenContext;
+import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
@@ -34,7 +34,7 @@ public final class Telepat
 {
 	private static Telepat mInstance;
 	private        Context                        mContext;
-	private        HashMap<Integer, KrakenContext> mServerContexts;
+	private        HashMap<Integer, TelepatContext> mServerContexts;
 	private OctopusApi apiClient;
 	private OctopusRequestInterceptor requestInterceptor;
 	private TelepatInternalDB internalDB;
@@ -119,9 +119,9 @@ public final class Telepat
 
 	private void updateContexts()
 	{
-		apiClient.updateContexts(new Callback<Map<Integer, KrakenContext>>() {
+		apiClient.updateContexts(new Callback<Map<Integer, TelepatContext>>() {
 			@Override
-			public void success(Map<Integer, KrakenContext> contextMap,
+			public void success(Map<Integer, TelepatContext> contextMap,
 								retrofit.client.Response response) {
 				if(contextMap == null) return;
 				TelepatLogger.log("Retrieved "+contextMap.keySet().size()+" contexts");
@@ -172,54 +172,19 @@ public final class Telepat
 		});
 	}
 
-	public Channel subscribe(KrakenContext context, String modelName, OnChannelEventListener listener, Class type) {
-		Channel channel = new Channel(context, modelName, listener, type);
+	public Channel subscribe(TelepatContext context, String modelName, OnChannelEventListener listener, Class type) {
+		Channel channel = new Channel.Builder().
+                setContext(context).
+                setModelName(modelName).
+                setChannelEventListener(listener).
+                setObjectType(type).
+                build();
 		subscriptions.add(channel);
+		channel.subscribe();
 		return channel;
-//		var channel = new Channel(API, log, error, context, channel);
-//
-//		subscriptions.push(channel);
-//		if (onUpdate !== undefined) {
-//			channel.on("update", onUpdate);
-//		}
-//		channel.on("_unsubscribe", function () {
-//			var index = subscriptions.indexOf(channel);
-//			if (index > -1) {
-//				subscriptions.splice(index, 1);
-//			}
-//		});
-//		return channel;
-//	}
 	}
 
-	public Map<Integer, KrakenContext> getContexts() { return mServerContexts; }
+	public Map<Integer, TelepatContext> getContexts() { return mServerContexts; }
 
-//	public void queuePatch()
-//	{
-//
-//	}
-//
-//	public class PatchDispatcher
-//	{
-//		private static final int DISPATCH_TIME_CAP  = 100;
-//		private static final int DISPATCH_COUNT_CAP = 10;
-//
-//		private long mMostRecentTimestamp;
-//		private int  mPatchCounter;
-//
-//		public void queuePatch()
-//		{
-//			long now = System.nanoTime();
-//
-//			if (now - mMostRecentTimestamp > DISPATCH_TIME_CAP || mPatchCounter >= DISPATCH_COUNT_CAP)
-//			{
-//				mPatchCounter = 0;
-//			}
-//			else
-//			{
-//				mMostRecentTimestamp = now;
-//				mPatchCounter++;
-//			}
-//		}
-//	}
+	public void removeSubscription(Channel mChannel) { subscriptions.remove(mChannel); }
 }
