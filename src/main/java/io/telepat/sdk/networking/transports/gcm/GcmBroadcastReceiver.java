@@ -12,7 +12,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import io.telepat.sdk.utilities.TelepatConstants;
 
 /**
- * Created by catalinivan on 09/03/15.
+ * Created by catalinivan, Andrei Marinescu on 09/03/15.
+ * GCM Receiver class.
  */
 public class GcmBroadcastReceiver extends WakefulBroadcastReceiver
 {

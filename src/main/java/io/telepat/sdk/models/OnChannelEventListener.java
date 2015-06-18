@@ -6,9 +6,11 @@ package io.telepat.sdk.models;
  */
 public interface OnChannelEventListener
 {
-	void onObjectAdded(Object toAdd);
+	void onObjectAdded(TelepatBaseModel toAdd);
 
-	void onObjectRemoved(Object toRemove);
+	void onObjectCreateSuccess(TelepatBaseModel toAdd);
+
+	void onObjectRemoved(TelepatBaseModel toRemove);
 
 	void onObjectModified(Object target, Object newValue);
 

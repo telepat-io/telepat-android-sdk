@@ -2,7 +2,9 @@ package io.telepat.sdk.models;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +26,13 @@ public class Channel {
 	private TelepatContext mTelepatContext;
 	private Class objectType;
 	private Gson gson = new Gson();
+	private HashMap<String, TelepatBaseModel> waitingForCreation = new HashMap<>();
+
+	public enum NotificationType {
+		ObjectAdded,
+		ObjectUpdated,
+		ObjectDeleted
+	}
 
 	public static class Builder {
 		private String mModelName;
@@ -46,11 +55,20 @@ public class Channel {
 		}
 	}
 
+	public Channel(String identifier) {
+		String[] identifierSegments = identifier.split("/:/");
+		Integer contextId = Integer.parseInt(identifierSegments[1]);
+		this.mTelepatContext = Telepat.getInstance().getContexts().get(contextId);
+		this.mModelName = identifierSegments[2];
+		this.objectType = Object.class;
+	}
+
 	public Channel(Builder builder) {
 		this.mModelName = builder.mModelName;
 		this.mChannelEventListener = builder.mChannelEventListener;
 		this.mTelepatContext = builder.mTelepatContext;
 		this.objectType = builder.objectType;
+//		this.notifyStoredObjects();
 	}
 
 	public void subscribe() {
@@ -60,23 +78,36 @@ public class Channel {
 						getSubscribingRequestBody(),
 						new Callback<HashMap<String, JsonElement>>() {
 							@Override
-							public void success(HashMap<String, JsonElement> responseHashMap, Response response) {
+							public void success(
+									HashMap<String, JsonElement> responseHashMap,
+									Response response) {
+
 								Integer status = Integer.parseInt(responseHashMap.get("status").toString());
 								JsonElement message = responseHashMap.get("message");
+
 								if(status == 200) {
-									for (Map.Entry<String, JsonElement> entry : message.getAsJsonObject().entrySet()) {
-										Channel.this.mChannelEventListener.
-												onObjectAdded(gson.fromJson(entry.getValue(),
-														Channel.this.objectType));
+									Telepat.getInstance().registerSubscription(Channel.this);
+
+									for (Map.Entry<String, JsonElement> entry
+											: message.getAsJsonObject().entrySet()) {
+										processNotification(entry.getValue(), NotificationType.ObjectAdded);
 									}
+
 								} else {
-									Channel.this.mChannelEventListener.onError(status, message.toString());
+									if(Channel.this.mChannelEventListener!=null)
+										Channel.this.mChannelEventListener.onError(status, message.toString());
 								}
 							}
 
 							@Override
 							public void failure(RetrofitError error) {
-								TelepatLogger.log("Error subscribing: "+error.getMessage());
+								if(error.getMessage().startsWith("409")) {
+									TelepatLogger.log("There is an already active subscription for this channel.");
+								} else if(error.getMessage().startsWith("401")) {
+									TelepatLogger.log("Not logged in.");
+								} else {
+									TelepatLogger.log("Error subscribing: " + error.getMessage());
+								}
 							}
 						});
 	}
@@ -106,6 +137,7 @@ public class Channel {
 							@Override
 							public void success(HashMap<Integer, String> integerStringHashMap, Response response) {
 								TelepatLogger.log("Unsubscribed");
+								Telepat.getInstance().getDBInstance().deleteChannelObjects(Channel.this.getSubscriptionIdentifier());
 							}
 
 							@Override
@@ -115,24 +147,94 @@ public class Channel {
 						});
 	}
 
-	public void add(Object object) {
+	public String add(TelepatBaseModel object) {
+		//TODO add a proper uuid
+		object.setUuid(""+System.currentTimeMillis());
+		waitingForCreation.put(object.getUuid(), object);
 		Telepat.getInstance().getAPIInstance().create(getCreateRequestBody(object), new Callback<String>() {
 			@Override
 			public void success(String s, Response response) {
-				TelepatLogger.log("Create successful: "+s);
+				TelepatLogger.log("Create successful: " + s);
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.log("Create failed: "+error.getMessage());
+				TelepatLogger.log("Create failed: " + error.getMessage());
 			}
 		});
+		return object.getUuid();
 	}
 
 	@SuppressWarnings("unused")
 	public void setOnChannelEventListener(OnChannelEventListener listener) {
 		mChannelEventListener = listener;
 	}
+
+	public String getSubscriptionIdentifier() {
+		/*
+		 var key = 'blg:'+channel.context+':'+Application.loadedAppModels[appId][channel.model].namespace;
+
+ if (channel.id) {
+  key += ':'+channel.id;
+
+  return key;
+ }
+
+ if (channel.user)
+  key += ':users:'+user;
+ if (channel.parent)
+  key += ':'+channel.parent.model+':'+channel.parent.id;
+
+ if (extraFilters)
+  key += ':filters:'+(new Buffer(JSON.stringify(utils.parseQueryObject(extraFilters)))).toString('base64');
+
+ return key;
+}
+
+		 */
+		if(mTelepatContext == null || mModelName == null) return null;
+		return "blg:"+mTelepatContext.getId()+':'+mModelName;
+		//TODO add support for more channel params
+	}
+
+	public void notifyStoredObjects() {
+		if(mChannelEventListener == null) return;
+		for(TelepatBaseModel dataObject : Telepat.getInstance().getDBInstance().getChannelObjects(getSubscriptionIdentifier(), this.objectType)) {
+			mChannelEventListener.onObjectAdded(dataObject);
+		}
+	}
+
+	public void processNotification(JsonElement object, NotificationType type) {
+		switch (type) {
+			case ObjectAdded:
+				TelepatBaseModel dataObject = (TelepatBaseModel) gson.fromJson(object, this.objectType);
+				if(waitingForCreation.containsKey(dataObject.getUuid())) {
+					waitingForCreation.get(dataObject.getUuid()).setId(dataObject.getId());
+					if(mChannelEventListener != null) {
+						mChannelEventListener.onObjectCreateSuccess(waitingForCreation.get(dataObject.getUuid()));
+						waitingForCreation.remove(dataObject.getUuid());
+					}
+					return;
+				}
+				if(Telepat.getInstance().getDBInstance().objectExists(getSubscriptionIdentifier(), dataObject.getId())) {
+					return;
+				}
+				if(mChannelEventListener != null) {
+					mChannelEventListener.onObjectAdded(dataObject);
+				}
+				Telepat.getInstance().getDBInstance().
+						persistObject(this.getSubscriptionIdentifier(),
+								dataObject.getId(),
+								dataObject
+								);
+				break;
+			case ObjectUpdated:
+				break;
+			case ObjectDeleted:
+				break;
+		}
+	}
+
 
 
 }

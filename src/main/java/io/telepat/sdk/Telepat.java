@@ -38,7 +38,8 @@ public final class Telepat
 	private OctopusApi apiClient;
 	private OctopusRequestInterceptor requestInterceptor;
 	private TelepatInternalDB internalDB;
-	private CopyOnWriteArrayList<Channel> subscriptions = new CopyOnWriteArrayList<>();
+	private HashMap<String, Channel> subscriptions = new HashMap<>();
+	private String localUdid;
 
 	private Telepat() {	}
 
@@ -60,14 +61,17 @@ public final class Telepat
 	public void initialize(Context context,
 						   final String clientApiKey,
 						   final String clientAppId,
-						   String senderId)
-	{
+						   String senderId) {
 		mContext = context.getApplicationContext();
 		internalDB = new TelepatSnappyDb(context);
 		TelepatConstants.GCM_SENDER_ID = senderId;
 		initHTTPClient(clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
+	}
+
+	public void destroy() {
+		internalDB.close();
 	}
 
 	private void initHTTPClient(String clientApiKey, final String clientAppId) {
@@ -112,9 +116,9 @@ public final class Telepat
 
 				}
 			});
-		} else {
+		} //else {
 			//TODO send update
-		}
+		//}
 	}
 
 	private void updateContexts()
@@ -179,12 +183,35 @@ public final class Telepat
                 setChannelEventListener(listener).
                 setObjectType(type).
                 build();
-		subscriptions.add(channel);
+//		subscriptions.put(channel.getSubscriptionIdentifier(), channel);
 		channel.subscribe();
 		return channel;
 	}
 
 	public Map<Integer, TelepatContext> getContexts() { return mServerContexts; }
 
-	public void removeSubscription(Channel mChannel) { subscriptions.remove(mChannel); }
+    @SuppressWarnings("unused")
+	public void removeSubscription(Channel mChannel) {
+        mChannel.unsubscribe();
+        subscriptions.remove(mChannel.getSubscriptionIdentifier());
+    }
+
+    public void registerSubscription(Channel mChannel) {
+        subscriptions.put(mChannel.getSubscriptionIdentifier(), mChannel);
+    }
+
+	public Channel getSubscribedChannel(String channelIdentifier) {
+		return subscriptions.get(channelIdentifier);
+	}
+
+	public String getDeviceLocalIdentifier() {
+		if(localUdid!=null) return localUdid;
+		String androidId = android.provider.Settings.System.getString(mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+		localUdid = (String) internalDB.getOperationsData(TelepatConstants.LOCAL_UDID_KEY, androidId, String.class);
+		return localUdid;
+	}
+
+	public void setDeviceLocalIdentifier(String udid) {
+		internalDB.setOperationsData(TelepatConstants.LOCAL_UDID_KEY, udid);
+	}
 }
