@@ -16,6 +16,10 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     protected int id;
     protected String uuid;
 
+    public TelepatBaseModel() {
+//        this.addPropertyChangeListener(this);
+    }
+
     public int getId() {
         return id;
     }
@@ -23,6 +27,14 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     protected void setId(int id) {
         telepatChangeMonitor.firePropertyChange("id", this.id, id);
         this.id = id;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -52,16 +64,4 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
 
     }
 
-    public TelepatBaseModel() {
-        this.addPropertyChangeListener(this);
-    }
-
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
 }

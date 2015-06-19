@@ -42,4 +42,7 @@ public interface OctopusApi {
 
     @POST("/object/create")
     void create(@Body Map<String, Object> body, Callback<String> cb);
+
+    @POST("/object/update")
+    void update(@Body Map<String, Object> body, Callback<JsonElement> cb);
 }

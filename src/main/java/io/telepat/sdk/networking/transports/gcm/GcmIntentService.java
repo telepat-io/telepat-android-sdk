@@ -43,15 +43,11 @@ public class GcmIntentService extends IntentService
 			String data = intent.getStringExtra("data");
 			JsonObject jsonObject = jsonParser.fromJson(data, JsonObject.class);
 			JsonArray newObjects = (JsonArray) jsonObject.get("new");
-			for(JsonElement newObject : newObjects) {
-				if(newObject.isJsonObject()) {
-					String channelIdentifier = ((JsonObject)newObject).get("subscription").getAsString();
-					Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
-					channel.processNotification(((JsonObject)newObject).get("value"), Channel.NotificationType.ObjectAdded);
-				}
-			}
 			JsonArray updatedObjects = (JsonArray) jsonObject.get("updated");
 			JsonArray deletedObjects = (JsonArray) jsonObject.get("deleted");
+			if(newObjects != null) notifyChannel(newObjects, Channel.NotificationType.ObjectAdded);
+			if(updatedObjects != null) notifyChannel(updatedObjects, Channel.NotificationType.ObjectUpdated);
+			if(deletedObjects != null) notifyChannel(deletedObjects, Channel.NotificationType.ObjectDeleted);
 //			TelepatLogger.log(jsonObject.get("new").toString());
 //			TelepatLogger.log(data);
 		}
@@ -72,5 +68,14 @@ public class GcmIntentService extends IntentService
 //		{
 //			e.printStackTrace();
 //		}
+	}
+	private void notifyChannel(JsonArray objects, Channel.NotificationType notificationType) {
+		for(JsonElement newObject : objects) {
+			if(newObject.isJsonObject()) {
+				String channelIdentifier = ((JsonObject)newObject).get("subscription").getAsString();
+				Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
+				channel.processNotification(((JsonObject)newObject).get("value"), notificationType);
+			}
+		}
 	}
 }
