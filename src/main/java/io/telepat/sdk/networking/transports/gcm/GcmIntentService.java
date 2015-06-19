@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import io.telepat.sdk.Telepat;
 import io.telepat.sdk.models.Channel;
+import io.telepat.sdk.models.TransportNotification;
 import io.telepat.sdk.utilities.TelepatLogger;
 
 /**
@@ -70,11 +71,13 @@ public class GcmIntentService extends IntentService
 //		}
 	}
 	private void notifyChannel(JsonArray objects, Channel.NotificationType notificationType) {
-		for(JsonElement newObject : objects) {
-			if(newObject.isJsonObject()) {
-				String channelIdentifier = ((JsonObject)newObject).get("subscription").getAsString();
+		for(JsonElement notificationObject : objects) {
+			if(notificationObject.isJsonObject()) {
+
+				TransportNotification notification = new TransportNotification((JsonObject)notificationObject, notificationType);
+				String channelIdentifier = ((JsonObject)notificationObject).get("subscription").getAsString();
 				Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
-				channel.processNotification(((JsonObject)newObject).get("value"), notificationType);
+				channel.processNotification(notification);
 			}
 		}
 	}

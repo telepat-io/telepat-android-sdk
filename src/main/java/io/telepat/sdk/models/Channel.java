@@ -20,10 +20,9 @@ import retrofit.client.Response;
  * Created by Andrei Marinescu, catalinivan on 09/03/15.
  * Telepat Channel model
  */
+
 public class Channel implements PropertyChangeListener {
-//	private HashMap<String, KrakenObject> mObjects;
 	private String mModelName;
-//	private ArrayList<String>       mFilters;
 	private OnChannelEventListener mChannelEventListener;
 	private TelepatContext mTelepatContext;
 	private Class objectType;
@@ -57,6 +56,7 @@ public class Channel implements PropertyChangeListener {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public Channel(String identifier) {
 		String[] identifierSegments = identifier.split("/:/");
 		Integer contextId = Integer.parseInt(identifierSegments[1]);
@@ -92,7 +92,7 @@ public class Channel implements PropertyChangeListener {
 
 									for (Map.Entry<String, JsonElement> entry
 											: message.getAsJsonObject().entrySet()) {
-										processNotification(entry.getValue(), NotificationType.ObjectAdded);
+										processNotification(new TransportNotification(entry.getValue()));
 									}
 
 								} else {
@@ -151,7 +151,8 @@ public class Channel implements PropertyChangeListener {
 							@Override
 							public void success(HashMap<Integer, String> integerStringHashMap, Response response) {
 								TelepatLogger.log("Unsubscribed");
-								Telepat.getInstance().getDBInstance().deleteChannelObjects(Channel.this.getSubscriptionIdentifier());
+								Telepat.getInstance().getDBInstance().
+										deleteChannelObjects(Channel.this.getSubscriptionIdentifier());
 							}
 
 							@Override
@@ -213,16 +214,17 @@ public class Channel implements PropertyChangeListener {
 
 	public void notifyStoredObjects() {
 		if(mChannelEventListener == null) return;
-		for(TelepatBaseModel dataObject : Telepat.getInstance().getDBInstance().getChannelObjects(getSubscriptionIdentifier(), this.objectType)) {
+		for(TelepatBaseModel dataObject : Telepat.getInstance().
+				getDBInstance().getChannelObjects(getSubscriptionIdentifier(), this.objectType)) {
 			dataObject.addPropertyChangeListener(this);
 			mChannelEventListener.onObjectAdded(dataObject);
 		}
 	}
 
-	public void processNotification(JsonElement object, NotificationType type) {
-		switch (type) {
+	public void processNotification(TransportNotification notification) {
+		switch (notification.getNotificationType()) {
 			case ObjectAdded:
-				TelepatBaseModel dataObject = (TelepatBaseModel) gson.fromJson(object, this.objectType);
+				TelepatBaseModel dataObject = (TelepatBaseModel) gson.fromJson(notification.getNotificationValue(), this.objectType);
 				if(waitingForCreation.containsKey(dataObject.getUuid())) {
 					waitingForCreation.get(dataObject.getUuid()).setId(dataObject.getId());
 					waitingForCreation.get(dataObject.getUuid()).addPropertyChangeListener(this);
@@ -245,7 +247,7 @@ public class Channel implements PropertyChangeListener {
 								);
 				break;
 			case ObjectUpdated:
-				TelepatLogger.log("Object updated: "+object.toString());
+				TelepatLogger.log("Object updated: " + notification.getNotificationValue().toString() + " with path: " + notification.getNotificationPath().toString());
 				break;
 			case ObjectDeleted:
 				break;

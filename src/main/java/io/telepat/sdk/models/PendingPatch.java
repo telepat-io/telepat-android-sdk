@@ -39,6 +39,7 @@ public class PendingPatch {
         this.op = op;
         this.path = path;
         this.value = value;
+        this.objectId = objectId;
     }
 
     public PatchType getOp() {
