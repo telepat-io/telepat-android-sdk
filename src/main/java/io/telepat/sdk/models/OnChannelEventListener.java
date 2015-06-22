@@ -10,9 +10,9 @@ public interface OnChannelEventListener
 
 	void onObjectCreateSuccess(TelepatBaseModel toAdd);
 
-	void onObjectRemoved(TelepatBaseModel toRemove);
+	void onObjectRemoved(TelepatBaseModel toRemove, int objectId);
 
-	void onObjectModified(Object target, Object newValue);
+	void onObjectModified(TelepatBaseModel target, String propertyName, String newValue);
 
 	void onError(Integer statusCode, String message);
 }

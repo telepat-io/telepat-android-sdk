@@ -4,11 +4,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 
 import io.telepat.sdk.utilities.TelepatLogger;
 
 /**
- * Created by Andrei on 17.06.2015.
+ * Created by Andrei Marinescu on 17.06.2015.
+ * Parent for all model classes used with the Telepat SDK.
  */
 public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     protected final transient PropertyChangeSupport telepatChangeMonitor = new PropertyChangeSupport(
@@ -54,6 +56,28 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
                                              PropertyChangeListener listener) {
         telepatChangeMonitor.removePropertyChangeListener(propertyName, listener);
     }
+
+    public void setProperty(String propertyName, Object propertyValue) {
+        Field property;
+        try {
+            property = this.getClass().getDeclaredField(propertyName);
+            property.setAccessible(true);
+            property.set(this, propertyValue);
+        } catch (NoSuchFieldException ignore) { }
+        catch (IllegalAccessException ignore) { }
+    }
+
+    public Object getProperty(String propertyName) {
+        Field property;
+        try {
+            property = this.getClass().getDeclaredField(propertyName);
+            property.setAccessible(true);
+            return property.get(this);
+        } catch (NoSuchFieldException ignore) { }
+        catch (IllegalAccessException ignore) { }
+        return null;
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent event) {
         if(event.getPropertyName().equals("id")) return;

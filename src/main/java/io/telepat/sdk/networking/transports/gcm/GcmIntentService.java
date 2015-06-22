@@ -28,8 +28,6 @@ public class GcmIntentService extends IntentService
 {
 	private static final String SERVICE_NAME = "io.telepat.sdk.networking.transports.gcm.GcmIntentService";
 
-//	private final ObjectMapper mMapper = new ObjectMapper();
-
 	private final Gson jsonParser = new Gson();
 
 	public GcmIntentService()
@@ -49,35 +47,19 @@ public class GcmIntentService extends IntentService
 			if(newObjects != null) notifyChannel(newObjects, Channel.NotificationType.ObjectAdded);
 			if(updatedObjects != null) notifyChannel(updatedObjects, Channel.NotificationType.ObjectUpdated);
 			if(deletedObjects != null) notifyChannel(deletedObjects, Channel.NotificationType.ObjectDeleted);
-//			TelepatLogger.log(jsonObject.get("new").toString());
-//			TelepatLogger.log(data);
 		}
-//		String patch = "{dummy:\"json\"}";
-//		JsonNode nodeToPatch = null; // get the node somehow (not implemented yet)
-//		JsonPatch jsonPatch = null;
-//
-//		try
-//		{
-//			jsonPatch = mMapper.readValue(patch, JsonPatch.class);
-//			nodeToPatch = jsonPatch.apply(nodeToPatch);
-//		}
-//		catch (IOException e)
-//		{
-//			e.printStackTrace();
-//		}
-//		catch (JsonPatchException e)
-//		{
-//			e.printStackTrace();
-//		}
 	}
 	private void notifyChannel(JsonArray objects, Channel.NotificationType notificationType) {
 		for(JsonElement notificationObject : objects) {
 			if(notificationObject.isJsonObject()) {
-
 				TransportNotification notification = new TransportNotification((JsonObject)notificationObject, notificationType);
 				String channelIdentifier = ((JsonObject)notificationObject).get("subscription").getAsString();
 				Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
-				channel.processNotification(notification);
+				if(channel != null) channel.processNotification(notification);
+				else {
+					//TODO - do persistance anyway
+					TelepatLogger.error("Discarding notification due to no local channel instance available");
+				}
 			}
 		}
 	}

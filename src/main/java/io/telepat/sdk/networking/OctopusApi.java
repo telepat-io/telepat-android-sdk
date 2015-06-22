@@ -41,8 +41,11 @@ public interface OctopusApi {
     void unsubscribe(@Body Map<String, Object> body, Callback<HashMap<Integer, String>> cb);
 
     @POST("/object/create")
-    void create(@Body Map<String, Object> body, Callback<String> cb);
+    void create(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
 
     @POST("/object/update")
-    void update(@Body Map<String, Object> body, Callback<JsonElement> cb);
+    void update(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
+
+    @POST("/object/delete")
+    void delete(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
 }

@@ -25,10 +25,8 @@ public class TelepatSnappyDb implements TelepatInternalDB {
     private DB snappyDb;
 
     public TelepatSnappyDb(Context mContext) {
-//        this.mContext = mContext;
         try {
             snappyDb = DBFactory.open(mContext, DB_NAME);
-//            objects = DBFactory.open(mContext, OBJECTS_DB);
         } catch (SnappydbException e) {
             e.printStackTrace();
         }
@@ -47,16 +45,21 @@ public class TelepatSnappyDb implements TelepatInternalDB {
     @Override
     public boolean objectExists(String channelIdentifier, int id) {
         try {
-            return snappyDb.exists(OBJECTS_PREFIX+channelIdentifier+":"+id);
+            return snappyDb.exists(getObjectKey(channelIdentifier, id));
         } catch (SnappydbException e) {
             return false;
         }
     }
 
     @Override
-    public void persistObject(String channelIdentifier, int id, Object value) {
-        String objectKey = OBJECTS_PREFIX + channelIdentifier+":"+id;
-        setData(objectKey, value);
+    public TelepatBaseModel getObject(String channelIdentifier, int id, Class type) {
+        return (TelepatBaseModel)getData(getObjectKey(channelIdentifier, id), null, type);
+    }
+
+    @Override
+    public void persistObject(String channelIdentifier, TelepatBaseModel object) {
+        String objectKey = getObjectKey(channelIdentifier, object.getId());
+        setData(objectKey, object);
     }
 
     @Override
@@ -79,7 +82,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
 
     public String[] channelKeys(String channelIdentifier) {
         try {
-            return snappyDb.findKeys(OBJECTS_PREFIX+channelIdentifier);
+            return snappyDb.findKeys(getChannelPrefix(channelIdentifier));
         } catch (SnappydbException e) {
             return new String[0];
         }
@@ -87,8 +90,18 @@ public class TelepatSnappyDb implements TelepatInternalDB {
 
     @Override
     public void deleteChannelObjects(String channelIdentifier) {
+        String[] keys = channelKeys(channelIdentifier);
+        for(String key : keys) {
+            try {
+                snappyDb.del(key);
+            } catch (SnappydbException ignore) {  }
+        }
+    }
+
+    @Override
+    public void deleteObject(String channelIdentifier, TelepatBaseModel object) {
         try {
-            snappyDb.del(channelIdentifier);
+            snappyDb.del(getObjectKey(channelIdentifier, object.getId()));
         } catch (SnappydbException e) {
             e.printStackTrace();
         }
@@ -103,7 +116,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         }
     }
 
-    public void setData(String key, Object value) {
+    private void setData(String key, Object value) {
         try {
             snappyDb.put(key, value);
         } catch (SnappydbException e) {
@@ -111,7 +124,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         }
     }
 
-    public Object getData(String key, Object defaultValue, Class type) {
+    private Object getData(String key, Object defaultValue, Class type) {
         try {
             Object obj = snappyDb.getObject(key, type);
             if(obj == null) return defaultValue;
@@ -122,7 +135,9 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         return defaultValue;
     }
 
+    @SuppressWarnings("unused")
     private List<Object> getObjectArray(String key, ArrayList<Object> defaultValue, Class type) {
+        //TODO refactor
         try {
             Object[] obj = snappyDb.getObjectArray(OBJECTS_PREFIX + key, type);
             if(obj == null) {
@@ -142,5 +157,13 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         } catch (SnappydbException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getChannelPrefix(String channelIdentifier) {
+        return OBJECTS_PREFIX + channelIdentifier;
+    }
+
+    private String getObjectKey(String channelIdentifier, int id) {
+        return getChannelPrefix(channelIdentifier)+":"+id;
     }
 }
