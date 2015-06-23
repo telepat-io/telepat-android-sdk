@@ -9,11 +9,29 @@ import java.util.Map;
  */
 
 public class PendingPatch {
+    /**
+     * The operation type. May be add, replace, remove, increment
+     */
     private PatchType op;
+
+    /**
+     * The path the operation modifies
+     */
     private String path;
+
+    /**
+     * The value the operation modifies
+     */
     private Object value;
+
+    /**
+     * The ID of the Telepat object
+     */
     private int objectId;
 
+    /**
+     * The possible types of patches sent by the SDK
+     */
     public enum PatchType {
         add ("add"),
         replace ("replace"),
@@ -74,6 +92,10 @@ public class PendingPatch {
         this.objectId = objectId;
     }
 
+    /**
+     * Transforms the PendingPatch into a Map representation that can be sent via the network
+     * @return a Map instance
+     */
     public Map<String, Object> toMap() {
         HashMap<String, Object> patch = new HashMap<>();
         patch.put("op", op);

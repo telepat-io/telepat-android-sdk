@@ -13,9 +13,20 @@ import io.telepat.sdk.utilities.TelepatLogger;
  * Parent for all model classes used with the Telepat SDK.
  */
 public class TelepatBaseModel implements PropertyChangeListener, Serializable {
+    /**
+     * Monitors the object for changes to be notified to the Telepat cloud
+     */
     protected final transient PropertyChangeSupport telepatChangeMonitor = new PropertyChangeSupport(
             this);
+
+    /**
+     * The Telepat object ID
+     */
     protected int id;
+
+    /**
+     * Object creation UUID
+     */
     protected String uuid;
 
     public TelepatBaseModel() {
@@ -57,6 +68,11 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
         telepatChangeMonitor.removePropertyChangeListener(propertyName, listener);
     }
 
+    /**
+     * Set a value of an object's field
+     * @param propertyName the field name
+     * @param propertyValue the desired value
+     */
     public void setProperty(String propertyName, Object propertyValue) {
         Field property;
         try {
@@ -67,6 +83,11 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
         catch (IllegalAccessException ignore) { }
     }
 
+    /**
+     * Retrieves the value of an object's field
+     * @param propertyName the name of the field
+     * @return the value of the specified field
+     */
     public Object getProperty(String propertyName) {
         Field property;
         try {
@@ -78,6 +99,11 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
         return null;
     }
 
+    /**
+     * Listener for object field value changes
+     * @param event
+     */
+    @SuppressWarnings("JavaDoc")
     @Override
     public void propertyChange(PropertyChangeEvent event) {
         if(event.getPropertyName().equals("id")) return;
