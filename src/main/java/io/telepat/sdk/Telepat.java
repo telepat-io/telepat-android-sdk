@@ -52,10 +52,18 @@ public final class Telepat
 		return mInstance;
 	}
 
+	/**
+	 * Get access to an instance controlling the internal storage DB
+	 * @return An instance of a class implementing <code>TelepatInternalDB</code>
+	 */
 	public TelepatInternalDB getDBInstance() {
 		return internalDB;
 	}
 
+    /**
+     * Get access to an Retrofit instance that is able to communicate with the Telepat Sync API
+     * @return An <code>OctopusApi</code> instance
+     */
 	public OctopusApi getAPIInstance() { return apiClient; }
 
 	public void initialize(Context context,
@@ -70,10 +78,19 @@ public final class Telepat
 		updateContexts();
 	}
 
+    /**
+     * Close the current Telepat instance. You should reinitialize the Telepat SDK before doing
+     * additional work.
+     */
 	public void destroy() {
 		internalDB.close();
 	}
 
+    /**
+     * Configures the OctopusApi instance with relevant credentials
+     * @param clientApiKey A string containing a Telepat client API key
+     * @param clientAppId A string containing the corresponding Telepat application ID
+     */
 	private void initHTTPClient(String clientApiKey, final String clientAppId) {
 		requestInterceptor = new OctopusRequestInterceptor(clientApiKey, clientAppId);
 
@@ -88,6 +105,12 @@ public final class Telepat
 		apiClient = restAdapter.create(OctopusApi.class);
 	}
 
+    /**
+     * Send the Telepat Sync API a device registration request
+     * @param regId A GCM token for the current device
+     * @param shouldUpdateBackend If true, an update should be sent to the Telepat cloud instance
+     *                            regardless of the state of the token (new/already sent)
+     */
 	public void registerDevice(String regId, boolean shouldUpdateBackend)
 	{
 		String udid = (String) internalDB.getOperationsData(TelepatConstants.UDID_KEY,
@@ -121,6 +144,9 @@ public final class Telepat
 		//}
 	}
 
+    /**
+     * Retrieve the currently active contexts for the current Telepat application
+     */
 	private void updateContexts()
 	{
 		apiClient.updateContexts(new Callback<Map<Integer, TelepatContext>>() {
@@ -141,6 +167,10 @@ public final class Telepat
 		});
 	}
 
+    /**
+     * Send a Telepat Sync API call for logging in a user
+     * @param fbToken A Facebook OAUTH token
+     */
 	public void login(final String fbToken)
 	{
 		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
@@ -160,6 +190,9 @@ public final class Telepat
 		});
 	}
 
+    /**
+     * Send a Telepat Sync API call for logging out the current user.
+     */
 	public void logout()
 	{
 		apiClient.logout(new HashMap<String, String>(), new Callback<HashMap<String, Object>>() {
@@ -176,6 +209,16 @@ public final class Telepat
 		});
 	}
 
+    /**
+     * Create a new subscription to a Telepat channel
+     * @param context The context ID where the desired objects live in
+     * @param modelName The model name of the desired objects
+     * @param listener An object implementing OnChannelEventListener. All channel events will be sent
+     *                 to this object.
+     * @param type The desired Java class of the objects that will be emitted in this channel (should
+     *             extend the TelepatBaseModel class)
+     * @return a <code>Channel</code> object with the specified characteristics
+     */
 	public Channel subscribe(TelepatContext context, String modelName, OnChannelEventListener listener, Class type) {
 		Channel channel = new Channel.Builder().
                 setContext(context).
@@ -188,29 +231,63 @@ public final class Telepat
 		return channel;
 	}
 
+    /**
+     * Get a Map of all curently active contexts for the Telepat Application
+     * @return A Map instance containing TelepatContext objects stored by their ID
+     */
 	public Map<Integer, TelepatContext> getContexts() { return mServerContexts; }
 
+    /**
+     * Remove a locally registered subscription of a Telepat Channel object (this does not send any
+     * notifications to the Telepat Sync API
+     * @param mChannel The channel instance
+     */
     @SuppressWarnings("unused")
 	public void removeSubscription(Channel mChannel) {
         mChannel.unsubscribe();
         subscriptions.remove(mChannel.getSubscriptionIdentifier());
     }
 
+    /**
+     * Locally register an active subscription to a Telepat Channel with the Telepat SDK instance
+     * (new channel objects register themselves automatically)
+     * @param mChannel The channel object to be registered
+     */
     public void registerSubscription(Channel mChannel) {
         subscriptions.put(mChannel.getSubscriptionIdentifier(), mChannel);
     }
 
+    /**
+     * Get the <code>Channel</code> instance of a locally registered channel.
+     * @param channelIdentifier A properly formatted string of the channel identifier.
+     * @return the <code>Channel</code> instance
+     */
 	public Channel getSubscribedChannel(String channelIdentifier) {
 		return subscriptions.get(channelIdentifier);
 	}
 
+    /**
+     * Get a unique device identifier. Used internally for detecting already registered devices
+     * @return A String containing the UDID
+     */
 	public String getDeviceLocalIdentifier() {
 		if(localUdid!=null) return localUdid;
-		String androidId = android.provider.Settings.System.getString(mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-		localUdid = (String) internalDB.getOperationsData(TelepatConstants.LOCAL_UDID_KEY, androidId, String.class);
+		String androidId = android.provider.Settings.
+                                    System.getString(mContext.getContentResolver(),
+                                                     android.provider.Settings.Secure.ANDROID_ID);
+
+		localUdid = (String) internalDB.getOperationsData(TelepatConstants.LOCAL_UDID_KEY,
+                                                          androidId,
+                                                          String.class);
+
 		return localUdid;
 	}
 
+    /**
+     * Set the unique device identifier sent to the Telepat cloud. This method should be used as
+     * early as possible, before registering the device with the Sync API.
+     * @param udid the desired UDID
+     */
 	public void setDeviceLocalIdentifier(String udid) {
 		internalDB.setOperationsData(TelepatConstants.LOCAL_UDID_KEY, udid);
 	}

@@ -8,6 +8,8 @@ import com.snappydb.SnappydbException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.telepat.sdk.Telepat;
@@ -19,12 +21,16 @@ import io.telepat.sdk.utilities.TelepatLogger;
  * Internal DB provider over Shared Preferences
  */
 public class TelepatSnappyDb implements TelepatInternalDB {
-    private static String DB_NAME = Telepat.class.getSimpleName()+"_OPERATIONS";
-    private static String OPERATIONS_PREFIX = "TP_OPERATIONS_";
-    private static String OBJECTS_PREFIX = "TP_OBJECTS_";
-    private DB snappyDb;
+
+    private static  String      DB_NAME = Telepat.class.getSimpleName()+"_OPERATIONS";
+    private static  String      OPERATIONS_PREFIX = "TP_OPERATIONS_";
+    private static  String      OBJECTS_PREFIX = "TP_OBJECTS_";
+
+    private         DB          snappyDb;
+    private         Context     mContext;
 
     public TelepatSnappyDb(Context mContext) {
+        this.mContext = mContext;
         try {
             snappyDb = DBFactory.open(mContext, DB_NAME);
         } catch (SnappydbException e) {
@@ -63,8 +69,10 @@ public class TelepatSnappyDb implements TelepatInternalDB {
     }
 
     @Override
-    public void persistObjects(String channelIdentifier, Object[] value) {
-        //setObjectData(channelIdentifier, value);
+    public void persistObjects(String channelIdentifier, TelepatBaseModel[] objects) {
+        for(TelepatBaseModel object : objects) {
+            persistObject(channelIdentifier, object);
+        }
     }
 
     @Override
@@ -76,6 +84,12 @@ public class TelepatSnappyDb implements TelepatInternalDB {
                 objects.add((TelepatBaseModel)snappyDb.get(key, type));
             } catch (SnappydbException ignored) { }
         }
+        Collections.sort(objects, new Comparator<TelepatBaseModel>() {
+            @Override
+            public int compare(TelepatBaseModel lhs, TelepatBaseModel rhs) {
+                return ((Integer)lhs.getId()).compareTo(rhs.getId());
+            }
+        });
         TelepatLogger.log("Retrieved "+channelIdentifier+ " objects. Size: "+objects.size());
         return objects;
     }
@@ -111,6 +125,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
     public void empty() {
         try {
             snappyDb.destroy();
+            snappyDb = DBFactory.open(mContext, DB_NAME);
         } catch (SnappydbException e) {
             e.printStackTrace();
         }

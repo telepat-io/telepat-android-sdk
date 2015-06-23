@@ -8,8 +8,7 @@ public final class TelepatConstants
 {
 	public static final String TELEPAT_ENDPOINT = "http://blg-octopus-api.cloudapp.net:3000";
 	public static final String TAG = "TelepatSDK";
-	public static final boolean RETROFIT_DEBUG_ENABLED  = false;
-
+	public static final boolean RETROFIT_DEBUG_ENABLED  = true;
 
 	public static final String UDID_KEY = "udid";
 	public static final String JWT_KEY = "authentication-token";
@@ -20,7 +19,6 @@ public final class TelepatConstants
 
 	public static String GCM_SENDER_ID = "361851333269";
 
-	private TelepatConstants()
-	{
+	private TelepatConstants() {
 	}
 }

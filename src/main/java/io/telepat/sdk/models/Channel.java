@@ -34,12 +34,18 @@ public class Channel implements PropertyChangeListener {
 	private TelepatInternalDB dbInstance;
 	private OctopusApi apiInstance;
 
+	/**
+	 * Possible notification message types arriving from the Telepat cloud
+	 */
 	public enum NotificationType {
 		ObjectAdded,
 		ObjectUpdated,
 		ObjectDeleted
 	}
 
+	/**
+	 * Builder pattern implementation for the Channel class
+	 */
 	public static class Builder {
 		private String mModelName;
 		private TelepatContext mTelepatContext;
@@ -61,13 +67,12 @@ public class Channel implements PropertyChangeListener {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	public Channel(String identifier) {
-		String[] identifierSegments = identifier.split("/:/");
+		String[] identifierSegments = identifier.split(":");
 		Integer contextId = Integer.parseInt(identifierSegments[1]);
 		this.mTelepatContext = Telepat.getInstance().getContexts().get(contextId);
 		this.mModelName = identifierSegments[2];
-		this.objectType = Object.class;
+		this.objectType = TelepatBaseModel.class;
 		linkExternalDependencies();
 	}
 
@@ -81,11 +86,19 @@ public class Channel implements PropertyChangeListener {
 //		this.notifyStoredObjects();
 	}
 
+	/**
+	 * Sets the internal DB and OctopusAPI references so that Channel objects are able to
+	 * persist data in the internal DB as well as send out Sync API requests.
+	 */
 	private void linkExternalDependencies() {
 		this.dbInstance = Telepat.getInstance().getDBInstance();
 		this.apiInstance = Telepat.getInstance().getAPIInstance();
 	}
 
+	/**
+	 * Create a new subscription with the Telepat Cloud instance.
+	 * If the device is already registered, the stored objects will be notified again.
+	 */
 	public void subscribe() {
 		Telepat.getInstance()
 				.getAPIInstance()
@@ -127,6 +140,11 @@ public class Channel implements PropertyChangeListener {
 						});
 	}
 
+	/**
+	 *
+	 * @return Get a HashMap containing the relevant POST field parameters for a
+	 * Subscribe Sync API request
+	 */
 	public HashMap<String, Object> getSubscribingRequestBody() {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		HashMap<String, Object> channel = new HashMap<>();
@@ -136,6 +154,11 @@ public class Channel implements PropertyChangeListener {
 		return requestBody;
 	}
 
+	/**
+	 *
+	 * @return Get a HashMap containing the relevant POST field parameters for an
+	 * item creating request
+	 */
 	public HashMap<String, Object> getCreateRequestBody(TelepatBaseModel object) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		requestBody.put("context", mTelepatContext.getId());
@@ -144,6 +167,11 @@ public class Channel implements PropertyChangeListener {
 		return requestBody;
 	}
 
+	/**
+	 *
+	 * @return Get a HashMap containing the relevant POST field parameters for an
+	 * item update request
+	 */
 	public HashMap<String, Object> getUpdateRequestBody(PendingPatch pendingPatch) {
 		HashMap<String, Object> body = new HashMap<>();
 		body.put("model", this.mModelName);
@@ -156,6 +184,11 @@ public class Channel implements PropertyChangeListener {
 		return body;
 	}
 
+	/**
+	 *
+	 * @return Get a HashMap containing the relevant POST field parameters for an
+	 * item delete request
+	 */
 	public HashMap<String, Object> getDeleteRequestBody(TelepatBaseModel object) {
 		HashMap<String, Object> body = new HashMap<>();
 		body.put("model", this.mModelName);
@@ -164,13 +197,16 @@ public class Channel implements PropertyChangeListener {
 		return body;
 	}
 
+	/**
+	 * Unsubscribes this device from receiving further updates from this channel
+	 */
 	public void unsubscribe() {
 		Telepat.getInstance()
 				.getAPIInstance()
 				.unsubscribe(getSubscribingRequestBody(),
-						new Callback<HashMap<Integer, String>>() {
+						new Callback<HashMap<String, String>>() {
 							@Override
-							public void success(HashMap<Integer, String> integerStringHashMap, Response response) {
+							public void success(HashMap<String, String> integerStringHashMap, Response response) {
 								TelepatLogger.log("Unsubscribed");
 								dbInstance.
 										deleteChannelObjects(Channel.this.getSubscriptionIdentifier());
@@ -183,6 +219,11 @@ public class Channel implements PropertyChangeListener {
 						});
 	}
 
+	/**
+	 * Create a new object on this Telepat channel
+	 * @param object an object of a class extending <code>TelepatBaseModel</code>
+	 * @return An UUID used for detecting the creation success
+	 */
 	public String add(TelepatBaseModel object) {
 		//TODO add a proper uuid
 		object.setUuid(""+System.currentTimeMillis());
@@ -190,16 +231,28 @@ public class Channel implements PropertyChangeListener {
 		apiInstance.create(getCreateRequestBody(object), new CrudOperationsCallback("Create"));
 		return object.getUuid();
 	}
-	
+
+	/**
+	 * Deletes an object from this Telepat channel
+	 * @param object an object of a class extending <code>TelepatBaseModel</code>
+	 */
 	public void remove(TelepatBaseModel object) {
 		apiInstance.delete(getDeleteRequestBody(object), new CrudOperationsCallback("Delete"));
 	}
 
+	/**
+	 * Set the listener object where events of this channel will be notified
+	 * @param listener an object of a class implementing <code>OnChannelEventListener</code>
+	 */
 	@SuppressWarnings("unused")
 	public void setOnChannelEventListener(OnChannelEventListener listener) {
 		mChannelEventListener = listener;
 	}
 
+	/**
+	 * Get a string representation of this channels characteristics
+	 * @return
+	 */
 	public String getSubscriptionIdentifier() {
 		/*
 		 var key = 'blg:'+channel.context+':'+Application.loadedAppModels[appId][channel.model].namespace;
@@ -227,6 +280,9 @@ public class Channel implements PropertyChangeListener {
 		//TODO add support for more channel params
 	}
 
+	/**
+	 * Send created notifications for currently locally stored objects in this channel.
+	 */
 	public void notifyStoredObjects() {
 		if(mChannelEventListener == null) return;
 		for(TelepatBaseModel dataObject : Telepat.getInstance().
@@ -236,6 +292,10 @@ public class Channel implements PropertyChangeListener {
 		}
 	}
 
+	/**
+	 * Save an object to the internal DB
+	 * @param object An object of a class extending TelepatBaseModel
+	 */
 	private void persistObject(TelepatBaseModel object) {
 		dbInstance.
 				persistObject(this.getSubscriptionIdentifier(),
@@ -243,6 +303,10 @@ public class Channel implements PropertyChangeListener {
 				);
 	}
 
+	/**
+	 * Process an incoming notification from a network transport
+	 * @param notification the received notification
+	 */
 	public void processNotification(TransportNotification notification) {
 		String[] pathSegments;
 		String modelName;
@@ -323,6 +387,10 @@ public class Channel implements PropertyChangeListener {
 		}
 	}
 
+	/**
+	 * Listener for modified objects (previously emitted by this channel)
+	 * @param event the property change event
+	 */
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		TelepatBaseModel obj = (TelepatBaseModel) event.getSource();

@@ -57,8 +57,9 @@ public class GcmIntentService extends IntentService
 				Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
 				if(channel != null) channel.processNotification(notification);
 				else {
-					//TODO - do persistance anyway
-					TelepatLogger.error("Discarding notification due to no local channel instance available");
+					TelepatLogger.error("No local channel instance available");
+					channel = new Channel(channelIdentifier);
+                    channel.processNotification(notification);
 				}
 			}
 		}

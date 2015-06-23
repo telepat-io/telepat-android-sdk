@@ -9,15 +9,15 @@ import io.telepat.sdk.models.TelepatBaseModel;
  * Interface for DB providers
  */
 public interface TelepatInternalDB {
-    void setOperationsData(String key, Object value);
-    Object getOperationsData(String key, Object defaultValue, Class type);
-    boolean objectExists(String channelIdentifier, int id);
-    TelepatBaseModel getObject(String channelIdentifier, int id, Class type);
-    void persistObject(String channelIdentifier, TelepatBaseModel object);
-    void persistObjects(String channelIdentifier, Object[] value);
-    List<TelepatBaseModel> getChannelObjects(String channelIdentifier, Class type);
-    void deleteChannelObjects(String channelIdentifier);
-    void deleteObject(String channelIdentifier, TelepatBaseModel object);
-    void empty();
-    void close();
+    void                    setOperationsData(String key, Object value);
+    Object                  getOperationsData(String key, Object defaultValue, Class type);
+    boolean                 objectExists(String channelIdentifier, int id);
+    TelepatBaseModel        getObject(String channelIdentifier, int id, Class type);
+    List<TelepatBaseModel>  getChannelObjects(String channelIdentifier, Class type);
+    void                    persistObject(String channelIdentifier, TelepatBaseModel object);
+    void                    persistObjects(String channelIdentifier, TelepatBaseModel[] objects);
+    void                    deleteObject(String channelIdentifier, TelepatBaseModel object);
+    void                    deleteChannelObjects(String channelIdentifier);
+    void                    empty();
+    void                    close();
 }
