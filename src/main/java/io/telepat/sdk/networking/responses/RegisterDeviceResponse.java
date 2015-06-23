@@ -5,6 +5,13 @@ package io.telepat.sdk.networking.responses;
  * Response PoJo class for device registering
  */
 public class RegisterDeviceResponse {
+    /**
+     * The API status code
+     */
     public int status;
+
+    /**
+     * The Telepat device identifier
+     */
     public String identifier;
 }

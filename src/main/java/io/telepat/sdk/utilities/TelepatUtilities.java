@@ -17,6 +17,11 @@ public class TelepatUtilities
 {
 	private static Random mRandom = new Random();
 
+	/**
+	 * SHA256 implementation
+	 * @param toHash the cleartext string
+	 * @return a SHA256 hashed string
+	 */
 	public static String sha256(final String toHash)
 	{
 		try
@@ -67,7 +72,11 @@ public class TelepatUtilities
 	private static final int HOUR_MILLIS = 60 * MINUTE_MILLIS;
 	private static final int DAY_MILLIS = 24 * HOUR_MILLIS;
 
-
+    /**
+     * Method for converting a timestamp in seconds/milliseconds to text
+     * @param time a timestamp in seconds/milliseconds
+     * @return a String representation (Ex: 5 seconds ago)
+     */
 	public static String getTimeAgo(long time) {
 		if (time < 1000000000000L) {
 			// if timestamp given in seconds, convert to millis

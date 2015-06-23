@@ -10,10 +10,17 @@ import java.util.Map;
 public class RegisterUserRequest
 {
 	public static final String KEY_USER_FB_TOKEN = "access_token";
+	/**
+	 * The logged in user's Facebook OAUTH token
+	 */
 	private String mFBToken;
 
 	public RegisterUserRequest(String fbToken) { mFBToken = fbToken; }
 
+	/**
+	 *
+	 * @return a Map representation of the required POST fields for a login request
+	 */
 	public Map<String, String> getParams() {
 		HashMap<String, String> params = new HashMap<>(1);
 

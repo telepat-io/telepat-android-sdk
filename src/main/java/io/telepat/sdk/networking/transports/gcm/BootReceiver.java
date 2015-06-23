@@ -6,6 +6,7 @@ import android.content.Intent;
 
 /**
  * Created by catalinivan on 12/03/15.
+ * BroadcastReceiver for bootup events (GCM re-registration)
  */
 public class BootReceiver extends BroadcastReceiver
 {

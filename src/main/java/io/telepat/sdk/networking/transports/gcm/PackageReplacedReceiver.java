@@ -6,6 +6,7 @@ import android.content.Intent;
 
 /**
  * Created by catalinivan on 12/03/15.
+ * BroadcastReceiver implementation for receiving application update callbacks (GCM re-registration)
  */
 public class PackageReplacedReceiver extends BroadcastReceiver
 {

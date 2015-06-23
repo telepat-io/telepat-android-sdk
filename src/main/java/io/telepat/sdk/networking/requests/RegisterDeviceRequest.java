@@ -13,12 +13,19 @@ import io.telepat.sdk.Telepat;
  */
 public class RegisterDeviceRequest
 {
+	/**
+	 * The GCM token of the device
+	 */
 	private String mRegId;
 	public RegisterDeviceRequest(String regId)
 	{
 		mRegId = regId;
 	}
 
+	/**
+	 * Returns a Map of the required POST fields of an device registration request
+	 * @return
+	 */
 	public Map<String, Object> getParams()
 	{
 		HashMap<String, Object> params = new HashMap<>();

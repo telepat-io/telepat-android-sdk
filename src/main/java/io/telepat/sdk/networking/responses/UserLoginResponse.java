@@ -5,5 +5,8 @@ package io.telepat.sdk.networking.responses;
  * Response PoJo Class for User/Login
  */
 public class UserLoginResponse {
+    /**
+     * The JWT token to be used for authentication
+     */
     public String token;
 }

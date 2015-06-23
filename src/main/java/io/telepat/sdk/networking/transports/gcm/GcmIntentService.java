@@ -28,6 +28,9 @@ public class GcmIntentService extends IntentService
 {
 	private static final String SERVICE_NAME = "io.telepat.sdk.networking.transports.gcm.GcmIntentService";
 
+	/**
+	 * Reference to a Gson instance, used for notification Json decoding
+	 */
 	private final Gson jsonParser = new Gson();
 
 	public GcmIntentService()
@@ -49,6 +52,12 @@ public class GcmIntentService extends IntentService
 			if(deletedObjects != null) notifyChannel(deletedObjects, Channel.NotificationType.ObjectDeleted);
 		}
 	}
+
+    /**
+     * Builds TransportNotification objects and relays it to the relevant channels
+     * @param objects A JsonArray of notifications
+     * @param notificationType The type of notifications (added/updated/deleted)
+     */
 	private void notifyChannel(JsonArray objects, Channel.NotificationType notificationType) {
 		for(JsonElement notificationObject : objects) {
 			if(notificationObject.isJsonObject()) {

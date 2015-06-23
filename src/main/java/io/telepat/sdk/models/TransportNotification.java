@@ -9,8 +9,19 @@ import com.google.gson.JsonObject;
  * the corresponding channel.
  */
 public class TransportNotification {
+    /**
+     * Notification type based on the <code>Channel.NotificationType</code> enum
+     */
     Channel.NotificationType notificationType;
+
+    /**
+     * The value the notification adds or changes
+     */
     JsonElement notificationValue;
+
+    /**
+     * The object path the notification affects
+     */
     JsonElement notificationPath;
 
     public TransportNotification(JsonObject notificationObject, Channel.NotificationType notificationType) {
@@ -42,6 +53,10 @@ public class TransportNotification {
         this.notificationValue = notificationValue;
     }
 
+    /**
+     *
+     * @return Returns true if the notificationValue field is not null
+     */
     public boolean hasValue() {
         return notificationValue != null;
     }
@@ -54,6 +69,10 @@ public class TransportNotification {
         this.notificationPath = notificationPath;
     }
 
+    /**
+     *
+     * @return returns ture if the notificationPath field is not null
+     */
     public boolean hasPath() {
         return notificationPath != null;
     }

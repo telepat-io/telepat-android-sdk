@@ -10,12 +10,29 @@ import retrofit.RequestInterceptor;
  * Retrofit RequestInterceptor implementation for adding required HTTP headers
  */
 public class OctopusRequestInterceptor implements RequestInterceptor{
+    /**
+     * The Telepat application ID
+     */
     private String appId;
+
+    /**
+     * The Telepat API key
+     */
     private String apiKey;
+
+    /**
+     * The hashed Telepat API key
+     */
     private String apiKeyHash;
 
+    /**
+     * The Telepat device identifier
+     */
     private String udid;
 
+    /**
+     * The Telepat JWT auth token
+     */
     private String authorizationToken;
 
     public OctopusRequestInterceptor(String apiKey, String appId) {
