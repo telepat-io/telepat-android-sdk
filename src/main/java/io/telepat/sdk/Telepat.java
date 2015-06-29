@@ -26,23 +26,51 @@ import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
 
 /**
- * Created by catalinivan on 10/03/15.
+ * Created by Andrei Marinescu, catalinivan on 10/03/15.
  *
  * Telepat Main Orchestrator
  */
 public final class Telepat
 {
+	/**
+	 * Telepat singleton instance
+	 */
 	private static Telepat mInstance;
+	/**
+	 * Reference to the application context
+	 */
 	private        Context                        mContext;
+	/**
+	 * References to the currently available Telepat contexts
+	 */
 	private        HashMap<Integer, TelepatContext> mServerContexts;
+	/**
+	 * Reference to a Telepat Sync API client
+	 */
 	private OctopusApi apiClient;
+	/**
+	 * Retrofit RequestInterceptor implementation for injecting the proper authentication headers
+	 */
 	private OctopusRequestInterceptor requestInterceptor;
+	/**
+	 * Internal storage reference
+	 */
 	private TelepatInternalDB internalDB;
+	/**
+	 * Locally registered Channel instances
+	 */
 	private HashMap<String, Channel> subscriptions = new HashMap<>();
+	/**
+	 * Unique device identifier
+	 */
 	private String localUdid;
 
 	private Telepat() {	}
 
+	/**
+	 *
+	 * @return Returns a reference to the singleton instance
+	 */
 	public static Telepat getInstance()
 	{
 		if (mInstance == null)	{
@@ -67,13 +95,14 @@ public final class Telepat
 	public OctopusApi getAPIInstance() { return apiClient; }
 
 	public void initialize(Context context,
+						   final String telepatEndpoint,
 						   final String clientApiKey,
 						   final String clientAppId,
 						   String senderId) {
 		mContext = context.getApplicationContext();
 		internalDB = new TelepatSnappyDb(context);
 		TelepatConstants.GCM_SENDER_ID = senderId;
-		initHTTPClient(clientApiKey, clientAppId);
+		initHTTPClient(telepatEndpoint, clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
 	}
@@ -91,11 +120,11 @@ public final class Telepat
      * @param clientApiKey A string containing a Telepat client API key
      * @param clientAppId A string containing the corresponding Telepat application ID
      */
-	private void initHTTPClient(String clientApiKey, final String clientAppId) {
+	private void initHTTPClient(String telepatEndpoint, String clientApiKey, final String clientAppId) {
 		requestInterceptor = new OctopusRequestInterceptor(clientApiKey, clientAppId);
 
 		RestAdapter.Builder rBuilder = new RestAdapter.Builder()
-				.setEndpoint(TelepatConstants.TELEPAT_ENDPOINT)
+				.setEndpoint(telepatEndpoint)
 				.setRequestInterceptor(requestInterceptor);
 		if(TelepatConstants.RETROFIT_DEBUG_ENABLED)
 			rBuilder.setLogLevel(RestAdapter.LogLevel.FULL)

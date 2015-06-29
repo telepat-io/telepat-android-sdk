@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+    <style type="">
+        span.ex {color:blue;}
+
+    </style>
+
+</HEAD>
+<BODY>
+<h1 class="title title-header">Telepat Android SDK Reference</h1>
+<h2 id="overview_description">About</h2>
+    The Telepat Android SDK provides the necessary bindings to interact with the Telepat Sync API,
+as well as a GCM transport implementation for receiving updates from a Telepat cloud instance.
+<hr>
+<h2>Setting up the plugin</h2>
+<h4>Adding the library</h4>
+<p> The Telepat Android SDK is available as an open-source gradle module that can be cloned from
+Github <a href="#">Github</a>, or as a Maven artifact that can be downloaded from the Telepat
+Maven repo:</p>
+<ul>
+    <li> io.telepat:android-sdk:0.2.0 </li>
+</ul>
+<p> You can easily add the Cast plugin as a Maven dependency:
+    <pre><code>
+        repositories {
+        maven {
+        url "https://maven.telepat.io.s3.amazonaws.com/releases"
+        }
+        }
+        dependencies {
+        compile 'io.telepat:android-sdk:0.2.0'
+        }
+    </code></pre>
+</p>
+<br />
+<hr>
+<h2>Usage</h2>
+<h4>AndroidManifest dependencies</h4>
+<p>The Telepat SDK exposes some receivers in order to keep the GCM token valid. We also require
+some basic permissions for accessing the network. The full changes required for the host application's
+AndroidManifest file are listed below</p>
+      <pre>
+      <code> {@literal
+          <uses-permission android:name="android.permission.INTERNET"/>
+          <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+          <service android:name="io.telepat.sdk.networking.transports.gcm.GcmIntentService"/> }
+      </code></pre>
+
+          Inside the <application> tag:
+      <pre><code> {@literal
+          <receiver
+                  android:name="io.telepat.sdk.networking.transports.gcm.GcmBroadcastReceiver"
+                  android:permission="com.google.android.c2dm.permission.SEND">
+              <intent-filter>
+                  <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                  <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+
+                  <category android:name="io.telepat.kraken"/>
+              </intent-filter>
+          </receiver>
+
+          <receiver android:name="io.telepat.sdk.networking.transports.gcm.PackageReplacedReceiver">
+              <intent-filter>
+                  <action android:name="android.intent.action.PACKAGE_REPLACED"/>
+                  <data
+                          android:path="com.appscend.kraken"
+                          android:scheme="package"/>
+              </intent-filter>
+          </receiver>
+
+          <receiver android:name="io.telepat.sdk.networking.transports.gcm.BootReceiver">
+              <intent-filter>
+                  <action android:name="android.intent.action.BOOT_COMPLETED"/>
+              </intent-filter>
+          </receiver> }
+      </code>
+      </pre>
+</BODY>
+</HTML>
