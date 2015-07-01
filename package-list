@@ -1,0 +1,8 @@
+io.telepat.sdk
+io.telepat.sdk.data
+io.telepat.sdk.models
+io.telepat.sdk.networking
+io.telepat.sdk.networking.requests
+io.telepat.sdk.networking.responses
+io.telepat.sdk.networking.transports.gcm
+io.telepat.sdk.utilities
