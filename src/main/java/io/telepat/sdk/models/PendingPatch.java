@@ -27,7 +27,7 @@ public class PendingPatch {
     /**
      * The ID of the Telepat object
      */
-    private int objectId;
+    private String objectId;
 
     /**
      * The possible types of patches sent by the SDK
@@ -53,7 +53,7 @@ public class PendingPatch {
         }
     }
 
-    public PendingPatch(PatchType op, String path, Object value, int objectId) {
+    public PendingPatch(PatchType op, String path, Object value, String objectId) {
         this.op = op;
         this.path = path;
         this.value = value;
@@ -84,11 +84,11 @@ public class PendingPatch {
         this.value = value;
     }
 
-    public int getObjectId() {
+    public String getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(int objectId) {
+    public void setObjectId(String objectId) {
         this.objectId = objectId;
     }
 

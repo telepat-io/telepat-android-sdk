@@ -69,7 +69,7 @@ public class Channel implements PropertyChangeListener {
 
 	public Channel(String identifier) {
 		String[] identifierSegments = identifier.split(":");
-		Integer contextId = Integer.parseInt(identifierSegments[1]);
+		String contextId = identifierSegments[1];
 		this.mTelepatContext = Telepat.getInstance().getContexts().get(contextId);
 		this.mModelName = identifierSegments[2];
 		this.objectType = TelepatBaseModel.class;
@@ -111,14 +111,14 @@ public class Channel implements PropertyChangeListener {
 									Response response) {
 
 								Integer status = Integer.parseInt(responseHashMap.get("status").toString());
-								JsonElement message = responseHashMap.get("message");
+								JsonElement message = responseHashMap.get("content");
 
 								if(status == 200) {
 									Telepat.getInstance().registerSubscription(Channel.this);
 
-									for (Map.Entry<String, JsonElement> entry
-											: message.getAsJsonObject().entrySet()) {
-										processNotification(new TransportNotification(entry.getValue()));
+									for (JsonElement entry
+											: message.getAsJsonArray()) {
+										processNotification(new TransportNotification(entry));
 									}
 
 								} else {
@@ -180,7 +180,7 @@ public class Channel implements PropertyChangeListener {
 		List<Map<String, Object>> pendingPatches = new ArrayList<>();
 		pendingPatches.add(pendingPatch.toMap());
 
-		body.put("patch", pendingPatches);
+		body.put("patches", pendingPatches);
 		return body;
 	}
 
@@ -310,7 +310,7 @@ public class Channel implements PropertyChangeListener {
 	public void processNotification(TransportNotification notification) {
 		String[] pathSegments;
 		String modelName;
-		int objectId;
+		String objectId;
 
 		switch (notification.getNotificationType()) {
 			case ObjectAdded:
@@ -347,7 +347,7 @@ public class Channel implements PropertyChangeListener {
 				modelName = pathSegments[0];
 				if(!modelName.equals(this.mModelName)) return;
 
-				objectId = Integer.parseInt(pathSegments[1]);
+				objectId = pathSegments[1];
 				String propertyName = pathSegments[2];
 
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
@@ -372,7 +372,7 @@ public class Channel implements PropertyChangeListener {
 				modelName = pathSegments[0];
 				if(!modelName.equals(this.mModelName)) return;
 
-				objectId = Integer.parseInt(pathSegments[1]);
+				objectId = pathSegments[1];
 				TelepatBaseModel deletedObject = null;
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
 					deletedObject = dbInstance.getObject(getSubscriptionIdentifier(),

@@ -12,13 +12,13 @@ public class TelepatContext
 	private long   startTime;
 	private long   endTime;
 	private int    state;
-	private int		application_id;
-	private int		id;
+	private String 	application_id;
+	private String	id;
 	private String name;
 
 	private HashMap<String, Object> meta;
 
-	public int getId()
+	public String getId()
 	{
 		return id;
 	}
@@ -72,11 +72,11 @@ public class TelepatContext
 		this.meta = meta;
 	}
 
-	public int getApplication_id() {
+	public String getApplication_id() {
 		return application_id;
 	}
 
-	public void setApplication_id(int application_id) {
+	public void setApplication_id(String application_id) {
 		this.application_id = application_id;
 	}
 

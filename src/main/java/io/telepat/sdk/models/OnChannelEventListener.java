@@ -26,7 +26,7 @@ public interface OnChannelEventListener
 	 * @param toRemove the deleted object. This value is null if the object isn't stored locally
 	 * @param objectId the ID of the deleted object
 	 */
-	void onObjectRemoved(TelepatBaseModel toRemove, int objectId);
+	void onObjectRemoved(TelepatBaseModel toRemove, String objectId);
 
 	/**
 	 * Fired when an object was updated

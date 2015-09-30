@@ -4,19 +4,18 @@ import android.content.Context;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
-import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.OnChannelEventListener;
+import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
 import io.telepat.sdk.networking.requests.RegisterUserRequest;
-import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
-import io.telepat.sdk.networking.responses.UserLoginResponse;
+import io.telepat.sdk.networking.responses.ContextsApiResponse;
+import io.telepat.sdk.networking.responses.GenericApiResponse;
 import io.telepat.sdk.networking.transports.gcm.GcmRegistrar;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatLogger;
@@ -24,6 +23,7 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
+import retrofit.client.Response;
 
 /**
  * Created by Andrei Marinescu, catalinivan on 10/03/15.
@@ -43,7 +43,7 @@ public final class Telepat
 	/**
 	 * References to the currently available Telepat contexts
 	 */
-	private        HashMap<Integer, TelepatContext> mServerContexts;
+	private        HashMap<String, TelepatContext> mServerContexts;
 	/**
 	 * Reference to a Telepat Sync API client
 	 */
@@ -149,16 +149,16 @@ public final class Telepat
 
 		if(udid.isEmpty()) {
 			RegisterDeviceRequest request = new RegisterDeviceRequest(regId);
-			apiClient.registerDevice(request.getParams(), new Callback<RegisterDeviceResponse>() {
+			apiClient.registerDevice(request.getParams(), new Callback<GenericApiResponse>() {
 				@Override
-				public void success(RegisterDeviceResponse octopusResponse,
+				public void success(GenericApiResponse octopusResponse,
 									retrofit.client.Response response) {
 					TelepatLogger.log("Register device success");
-					if (octopusResponse.status == 200 && octopusResponse.identifier != null) {
-						requestInterceptor.setUdid(octopusResponse.identifier);
+					if (octopusResponse.status == 200 && octopusResponse.content.get("identifier") != null) {
+						requestInterceptor.setUdid((String)octopusResponse.content.get("identifier"));
 						internalDB.setOperationsData(TelepatConstants.UDID_KEY,
-								octopusResponse.identifier);
-						TelepatLogger.log("Received Telepat UDID: " + octopusResponse.identifier);
+								octopusResponse.content.get("identifier"));
+						TelepatLogger.log("Received Telepat UDID: " + octopusResponse.content.get("identifier"));
 					}
 				}
 
@@ -178,20 +178,20 @@ public final class Telepat
      */
 	private void updateContexts()
 	{
-		apiClient.updateContexts(new Callback<Map<Integer, TelepatContext>>() {
+		apiClient.updateContexts(new Callback<ContextsApiResponse>() {
 			@Override
-			public void success(Map<Integer, TelepatContext> contextMap,
+			public void success(ContextsApiResponse contextMap,
 								retrofit.client.Response response) {
-				if(contextMap == null) return;
-				TelepatLogger.log("Retrieved "+contextMap.keySet().size()+" contexts");
+				if (contextMap == null) return;
 				if (mServerContexts == null) mServerContexts = new HashMap<>();
-				for(Integer ctxId : contextMap.keySet())
-					mServerContexts.put(ctxId, contextMap.get(ctxId));
+				for (TelepatContext ctx : contextMap.content)
+					mServerContexts.put(ctx.getId(), ctx);
+				TelepatLogger.log("Retrieved " + contextMap.content.size() + " contexts");
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.log("Failed to get contexts"+ error.getMessage());
+				TelepatLogger.log("Failed to get contexts" + error.getMessage());
 			}
 		});
 	}
@@ -200,21 +200,50 @@ public final class Telepat
      * Send a Telepat Sync API call for logging in a user
      * @param fbToken A Facebook OAUTH token
      */
-	public void login(final String fbToken)
+	public void register(final String fbToken)
 	{
 		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
-		apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<UserLoginResponse>() {
+		apiClient.registerAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<Map<String, String>>() {
 			@Override
-			public void success(UserLoginResponse userLoginResponse, retrofit.client.Response response) {
-				TelepatLogger.log("Received JWT token");
-				internalDB.setOperationsData(TelepatConstants.JWT_KEY, userLoginResponse.token);
-				internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
-				requestInterceptor.setAuthorizationToken(userLoginResponse.token);
+			public void success(Map<String, String> userRegisterResponse, retrofit.client.Response response) {
+				TelepatLogger.log("User registered");
+				apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<GenericApiResponse>() {
+					@Override
+					public void success(GenericApiResponse genericApiResponse, Response response) {
+						internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
+						internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+						requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
+						TelepatLogger.log("User logged in");
+					}
+
+					@Override
+					public void failure(RetrofitError error) {
+						TelepatLogger.log("User login failed.");
+					}
+				});
+
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.error("user login failed");
+				if(error.getResponse().getStatus()==409) {
+					apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<GenericApiResponse>() {
+						@Override
+						public void success(GenericApiResponse genericApiResponse, Response response) {
+							internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
+							internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+							requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
+							TelepatLogger.log("User logged in -- existing user");
+						}
+
+						@Override
+						public void failure(RetrofitError error) {
+							TelepatLogger.log("User login failed - "+error.getMessage());
+						}
+					});
+				} else {
+					TelepatLogger.error("user register failed");
+				}
 			}
 		});
 	}
@@ -224,7 +253,7 @@ public final class Telepat
      */
 	public void logout()
 	{
-		apiClient.logout(new HashMap<String, String>(), new Callback<HashMap<String, Object>>() {
+		apiClient.logout(new Callback<HashMap<String, Object>>() {
 			@Override
 			public void success(HashMap<String, Object> userLogoutResponse, retrofit.client.Response response) {
 				TelepatLogger.log("Logout successful");
@@ -264,7 +293,7 @@ public final class Telepat
      * Get a Map of all curently active contexts for the Telepat Application
      * @return A Map instance containing TelepatContext objects stored by their ID
      */
-	public Map<Integer, TelepatContext> getContexts() { return mServerContexts; }
+	public Map<String, TelepatContext> getContexts() { return mServerContexts; }
 
     /**
      * Remove a locally registered subscription of a Telepat Channel object (this does not send any

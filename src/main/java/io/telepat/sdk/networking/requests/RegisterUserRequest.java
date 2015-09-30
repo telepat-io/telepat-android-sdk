@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Created by catalinivan, Andrei Marinescu on 18/03/15.
- * Request formatting class for user/login
+ * Request formatting class for user/register
  */
 public class RegisterUserRequest
 {
@@ -19,7 +19,7 @@ public class RegisterUserRequest
 
 	/**
 	 *
-	 * @return a Map representation of the required POST fields for a login request
+	 * @return a Map representation of the required POST fields for a register request
 	 */
 	public Map<String, String> getParams() {
 		HashMap<String, String> params = new HashMap<>(1);

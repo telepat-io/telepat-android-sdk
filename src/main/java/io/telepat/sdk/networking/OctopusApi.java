@@ -3,12 +3,13 @@ package io.telepat.sdk.networking;
 import com.google.gson.JsonElement;
 
 import io.telepat.sdk.models.TelepatContext;
+import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import io.telepat.sdk.networking.responses.UserLoginResponse;
+import io.telepat.sdk.networking.responses.GenericApiResponse;
 import retrofit.Callback;
 import retrofit.http.Body;
 import retrofit.http.GET;
@@ -26,14 +27,30 @@ public interface OctopusApi {
      * @param cb
      */
     @POST("/device/register")
-    void registerDevice(@Body Map<String, Object> body, Callback<RegisterDeviceResponse> cb);
+    void registerDevice(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for retrieving all active contexts
      * @param cb
      */
     @GET("/context/all")
-    void updateContexts(Callback<Map<Integer,TelepatContext>> cb);
+    void updateContexts(Callback<ContextsApiResponse> cb);
+
+    /**
+     * Method for sending an async register request
+     * @param body
+     * @param cb
+     */
+    @POST("/user/register")
+    void registerAsync(@Body Map<String, String> body, Callback<Map<String, String>> cb);
+
+    /**
+     * Method for sending a synchronous register request
+     * @param body
+     * @return
+     */
+    @POST("/user/register")
+    Map<String, String> register(@Body Map<String, String> body);
 
     /**
      * Method for sending an async login request
@@ -41,23 +58,14 @@ public interface OctopusApi {
      * @param cb
      */
     @POST("/user/login")
-    void loginAsync(@Body Map<String, String> body, Callback<UserLoginResponse> cb);
-
-    /**
-     * Method for sending a synchronous login request
-     * @param body
-     * @return
-     */
-    @POST("/user/login")
-    UserLoginResponse login(@Body Map<String, String> body);
+    void loginAsync(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending a logout request
-     * @param body
      * @param cb
      */
-    @POST("/user/logout")
-    void logout(@Body Map<String, String> body, Callback<HashMap<String,Object>> cb);
+    @GET("/user/logout")
+    void logout(Callback<HashMap<String,Object>> cb);
 
     /**
      * Method for sending a subscribe request

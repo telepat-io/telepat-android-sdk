@@ -22,7 +22,7 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     /**
      * The Telepat object ID
      */
-    protected int id;
+    protected String id;
 
     /**
      * Object creation UUID
@@ -33,11 +33,11 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
 //        this.addPropertyChangeListener(this);
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    protected void setId(int id) {
+    protected void setId(String id) {
         telepatChangeMonitor.firePropertyChange("id", this.id, id);
         this.id = id;
     }

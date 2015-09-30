@@ -31,7 +31,7 @@ public interface TelepatInternalDB {
      * @param id the Telepat object ID
      * @return true if the object exists, false otherwise
      */
-    boolean                 objectExists(String channelIdentifier, int id);
+    boolean                 objectExists(String channelIdentifier, String id);
 
     /**
      * Retrieve a stored object
@@ -40,7 +40,7 @@ public interface TelepatInternalDB {
      * @param type the class the object should be casted to
      * @return the stored object
      */
-    TelepatBaseModel        getObject(String channelIdentifier, int id, Class type);
+    TelepatBaseModel        getObject(String channelIdentifier, String id, Class type);
 
     /**
      * Retrieve a list of all stored objects for a channel

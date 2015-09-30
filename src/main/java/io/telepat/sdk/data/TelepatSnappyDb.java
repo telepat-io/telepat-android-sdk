@@ -82,7 +82,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
      * @return true if the object exists, false otherwise
      */
     @Override
-    public boolean objectExists(String channelIdentifier, int id) {
+    public boolean objectExists(String channelIdentifier, String id) {
         try {
             return snappyDb.exists(getObjectKey(channelIdentifier, id));
         } catch (SnappydbException e) {
@@ -98,7 +98,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
      * @return the stored object
      */
     @Override
-    public TelepatBaseModel getObject(String channelIdentifier, int id, Class type) {
+    public TelepatBaseModel getObject(String channelIdentifier, String id, Class type) {
         return (TelepatBaseModel)getData(getObjectKey(channelIdentifier, id), null, type);
     }
 
@@ -143,7 +143,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         Collections.sort(objects, new Comparator<TelepatBaseModel>() {
             @Override
             public int compare(TelepatBaseModel lhs, TelepatBaseModel rhs) {
-                return ((Integer)lhs.getId()).compareTo(rhs.getId());
+                return (lhs.getId()).compareTo(rhs.getId());
             }
         });
         TelepatLogger.log("Retrieved "+channelIdentifier+ " objects. Size: "+objects.size());
@@ -230,7 +230,10 @@ public class TelepatSnappyDb implements TelepatInternalDB {
             if(obj == null) return defaultValue;
             return obj;
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            if(!e.getMessage().startsWith("Failed to get a byte array: NotFound:"))
+                e.printStackTrace();
+            else
+                TelepatLogger.log("Internal DB object with key "+key+" not found");
         }
         return defaultValue;
     }
@@ -284,7 +287,7 @@ public class TelepatSnappyDb implements TelepatInternalDB {
      * @param id the object ID
      * @return the object key
      */
-    private String getObjectKey(String channelIdentifier, int id) {
+    private String getObjectKey(String channelIdentifier, String id) {
         return getChannelPrefix(channelIdentifier)+":"+id;
     }
 }
