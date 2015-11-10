@@ -10,6 +10,8 @@ import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.models.TelepatContext;
+import io.telepat.sdk.models.UserCreateListener;
+import io.telepat.sdk.models.UserLoginListener;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
@@ -65,6 +67,11 @@ public final class Telepat
 	 */
 	private String localUdid;
 
+	/**
+	 * Configured Telepat Application ID
+	 */
+	private String appId;
+
 	private Telepat() {	}
 
 	/**
@@ -101,6 +108,7 @@ public final class Telepat
 						   String senderId) {
 		mContext = context.getApplicationContext();
 		internalDB = new TelepatSnappyDb(context);
+		appId = clientAppId;
 		TelepatConstants.GCM_SENDER_ID = senderId;
 		initHTTPClient(telepatEndpoint, clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
@@ -226,7 +234,7 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				if(error.getResponse().getStatus()==409) {
+				if (error.getResponse().getStatus() == 409) {
 					apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<GenericApiResponse>() {
 						@Override
 						public void success(GenericApiResponse genericApiResponse, Response response) {
@@ -238,7 +246,7 @@ public final class Telepat
 
 						@Override
 						public void failure(RetrofitError error) {
-							TelepatLogger.log("User login failed - "+error.getMessage());
+							TelepatLogger.log("User login failed - " + error.getMessage());
 						}
 					});
 				} else {
@@ -246,6 +254,52 @@ public final class Telepat
 				}
 			}
 		});
+	}
+
+	/**
+	 * Submit a set of user credentials for creation
+	 * @param email The username of the Telepat user
+	 * @param password A cleartext password to be associated
+	 * @param name The displayable name of the user
+	 * @param listener A callback for success and error events
+	 */
+	public void createUser(final String email, final String password, final String name, final UserCreateListener listener) {
+		if(email!=null && password!=null && name!=null) {
+			HashMap<String, String> userHash = new HashMap<>();
+			userHash.put("username", email);
+			userHash.put("password", password);
+			userHash.put("name", name);
+			apiClient.createUserWithEmailAndPassword(userHash, new Callback<Map<String, String>>() {
+				@Override
+				public void success(Map<String, String> stringStringMap, Response response) {
+					listener.onUserCreateSuccess();
+				}
+
+				@Override
+				public void failure(RetrofitError error) {
+					listener.onUserCreateFailure();
+				}
+			});
+		}
+	}
+
+	public void loginWithUsername(final String email, final String password, final UserLoginListener listener) {
+		if(email != null && password != null) {
+			HashMap<String, String> userHash = new HashMap<>();
+			userHash.put("username", email);
+			userHash.put("password", password);
+			apiClient.loginWithEmailAndPassword(userHash, new Callback<GenericApiResponse>() {
+				@Override
+				public void success(GenericApiResponse genericApiResponse, Response response) {
+					TelepatLogger.log("Login successful");
+				}
+
+				@Override
+				public void failure(RetrofitError error) {
+					TelepatLogger.log("Login failed");
+				}
+			});
+		}
 	}
 
     /**
@@ -262,7 +316,7 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.error("user logout failed - "+error.getMessage());
+				TelepatLogger.error("user logout failed - " + error.getMessage());
 			}
 		});
 	}
@@ -348,5 +402,9 @@ public final class Telepat
      */
 	public void setDeviceLocalIdentifier(String udid) {
 		internalDB.setOperationsData(TelepatConstants.LOCAL_UDID_KEY, udid);
+	}
+
+	public String getAppId() {
+		return appId;
 	}
 }

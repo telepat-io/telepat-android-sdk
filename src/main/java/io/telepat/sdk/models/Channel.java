@@ -276,7 +276,7 @@ public class Channel implements PropertyChangeListener {
 
 		 */
 		if(mTelepatContext == null || mModelName == null) return null;
-		return "blg:"+mTelepatContext.getId()+':'+mModelName;
+		return "blg:"+Telepat.getInstance().getAppId()+":context:"+mTelepatContext.getId()+':'+mModelName;
 		//TODO add support for more channel params
 	}
 

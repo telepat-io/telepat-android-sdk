@@ -41,15 +41,23 @@ public interface OctopusApi {
      * @param body
      * @param cb
      */
-    @POST("/user/register")
+    @POST("/user/register-facebook")
     void registerAsync(@Body Map<String, String> body, Callback<Map<String, String>> cb);
+
+    /**
+     * Method for sending an async register request
+     * @param body
+     * @param cb
+     */
+    @POST("/user/register-username")
+    void createUserWithEmailAndPassword(@Body Map<String, String> body, Callback<Map<String, String>> cb);
 
     /**
      * Method for sending a synchronous register request
      * @param body
      * @return
      */
-    @POST("/user/register")
+    @POST("/user/register-facebook")
     Map<String, String> register(@Body Map<String, String> body);
 
     /**
@@ -57,8 +65,16 @@ public interface OctopusApi {
      * @param body
      * @param cb
      */
-    @POST("/user/login")
+    @POST("/user/login-facebook")
     void loginAsync(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    /**
+     * Method for sending an async login request
+     * @param body
+     * @param cb
+     */
+    @POST("/user/login_password")
+    void loginWithEmailAndPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending a logout request

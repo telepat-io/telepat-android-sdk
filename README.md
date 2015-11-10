@@ -12,7 +12,7 @@ The Telepat Android SDK provides the necessary bindings to interact with the Tel
 
 The Telepat Android SDK is available as an open-source gradle module that can be cloned from Github [Github](#), or as a Maven artifact that can be downloaded from the Telepat Maven repo:
 
-*   io.telepat:android-sdk:0.2.4
+*   io.telepat:android-sdk:0.2.6
 
 You can easily add the Cast plugin as a Maven dependency:
 
@@ -22,7 +22,7 @@ You can easily add the Cast plugin as a Maven dependency:
             }
             }
             dependencies {
-            compile 'io.telepat:telepat-android-sdk:0.2.4'
+            compile 'io.telepat:telepat-android-sdk:0.2.6'
             }
 
 * * *
