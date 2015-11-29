@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.telepat.BuildConfig;
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
@@ -121,6 +122,7 @@ public final class Telepat
 		initHTTPClient(telepatEndpoint, clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
+		TelepatLogger.log("Initialized Telepat Android SDK version "+ BuildConfig.VERSION_NAME);
 	}
 
     /**
