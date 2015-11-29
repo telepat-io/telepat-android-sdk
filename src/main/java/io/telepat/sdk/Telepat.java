@@ -343,6 +343,29 @@ public final class Telepat
 		return channel;
 	}
 
+	public Channel subscribe(TelepatContext context,
+							 String modelName,
+							 String objectId,
+							 String userId,
+							 String parentModelName,
+							 String parentId,
+							 HashMap<String, Object> filters,
+							 Class type,
+							 OnChannelEventListener listener) {
+		Channel channel = new Channel.Builder()
+				.setContext(context)
+				.setModelName(modelName)
+				.setUserFilter(userId)
+				.setSingleObjectIdFilter(objectId)
+				.setParentFilter(parentModelName, parentId)
+				.setFilters(filters)
+				.setObjectType(type)
+				.setChannelEventListener(listener)
+				.build();
+		channel.subscribe();
+		return channel;
+	}
+
     /**
      * Get a Map of all curently active contexts for the Telepat Application
      * @return A Map instance containing TelepatContext objects stored by their ID
