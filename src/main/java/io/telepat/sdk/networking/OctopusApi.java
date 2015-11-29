@@ -2,13 +2,10 @@ package io.telepat.sdk.networking;
 
 import com.google.gson.JsonElement;
 
-import io.telepat.sdk.models.TelepatContext;
-import io.telepat.sdk.networking.responses.ContextsApiResponse;
-import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.GenericApiResponse;
 import retrofit.Callback;
 import retrofit.http.Body;
@@ -109,6 +106,9 @@ public interface OctopusApi {
      */
     @POST("/object/subscribe")
     void subscribe(@Body Map<String, Object> body, Callback<HashMap<String, JsonElement>> cb);
+
+    @POST("/object/count")
+    void count(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
 
     /**
      * Method for sending an unsubscribe request
