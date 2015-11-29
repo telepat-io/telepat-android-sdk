@@ -84,6 +84,25 @@ public interface OctopusApi {
     void logout(Callback<HashMap<String,Object>> cb);
 
     /**
+     * Method for requesting a password reset email
+     * @param body
+     * @param cb
+     */
+    @POST("/user/request_password_reset")
+    void requestPasswordReset(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    /**
+     * Method for changing a user authentication password
+     * @param body
+     * @param cb
+     */
+    @POST("/user/password_reset")
+    void resetPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    @POST("/user/update")
+    void updateUser(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
+
+    /**
      * Method for sending a subscribe request
      * @param body
      * @param cb
