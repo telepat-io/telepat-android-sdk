@@ -1,10 +1,13 @@
 package io.telepat.sdk.models;
 
+import android.util.Base64;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,11 @@ import retrofit.client.Response;
 
 public class Channel implements PropertyChangeListener {
 	private String mModelName;
+	private String mUserId;
+	private String mParentModelName;
+	private String mParentId;
+	private String mSingleObjectId;
+	private HashMap<String, Object> mFilters;
 	private OnChannelEventListener mChannelEventListener;
 	private TelepatContext mTelepatContext;
 	private Class objectType;
@@ -47,13 +55,18 @@ public class Channel implements PropertyChangeListener {
 	 * Builder pattern implementation for the Channel class
 	 */
 	public static class Builder {
-		private String mModelName;
+		private String mModelName, mUserId, mParentModelName, mParentId, mSingleObjectId;
+		private HashMap<String, Object> mFilters;
 		private TelepatContext mTelepatContext;
 		private OnChannelEventListener mChannelEventListener;
 		private Class objectType;
 
 		public Builder setModelName(String modelName) { this.mModelName = modelName; return this; }
 		public Builder setContext(TelepatContext context) { this.mTelepatContext = context; return this;}
+		public Builder setUserFilter(String userId) { this.mUserId = userId; return this;}
+		public Builder setParentFilter(String parentModelName, String parentId) { this.mParentModelName = parentModelName; this.mParentId = parentId; return this;}
+		public Builder setSingleObjectIdFilter(String singleObjectId) {this.mSingleObjectId = singleObjectId; return this; }
+		public Builder setFilters(HashMap<String, Object> filters) { this.mFilters = filters; return this;}
 		public Builder setChannelEventListener(OnChannelEventListener listener) {
 			this.mChannelEventListener = listener;
 			return this;
@@ -81,6 +94,11 @@ public class Channel implements PropertyChangeListener {
 		this.mChannelEventListener = builder.mChannelEventListener;
 		this.mTelepatContext = builder.mTelepatContext;
 		this.objectType = builder.objectType;
+		this.mFilters = builder.mFilters;
+		this.mUserId = builder.mUserId;
+		this.mParentModelName = builder.mParentModelName;
+		this.mParentId = builder.mParentId;
+		this.mSingleObjectId = builder.mSingleObjectId;
 		this.dbInstance = Telepat.getInstance().getDBInstance();
 		linkExternalDependencies();
 //		this.notifyStoredObjects();
@@ -113,7 +131,7 @@ public class Channel implements PropertyChangeListener {
 								Integer status = Integer.parseInt(responseHashMap.get("status").toString());
 								JsonElement message = responseHashMap.get("content");
 
-								if(status == 200) {
+								if (status == 200) {
 									Telepat.getInstance().registerSubscription(Channel.this);
 
 									for (JsonElement entry
@@ -122,16 +140,16 @@ public class Channel implements PropertyChangeListener {
 									}
 
 								} else {
-									if(Channel.this.mChannelEventListener!=null)
+									if (Channel.this.mChannelEventListener != null)
 										Channel.this.mChannelEventListener.onError(status, message.toString());
 								}
 							}
 
 							@Override
 							public void failure(RetrofitError error) {
-								if(error.getMessage().startsWith("409")) {
+								if (error.getMessage().startsWith("409")) {
 									TelepatLogger.log("There is an already active subscription for this channel.");
-								} else if(error.getMessage().startsWith("401")) {
+								} else if (error.getMessage().startsWith("401")) {
 									TelepatLogger.log("Not logged in.");
 								} else {
 									TelepatLogger.log("Error subscribing: " + error.getMessage());
@@ -150,7 +168,16 @@ public class Channel implements PropertyChangeListener {
 		HashMap<String, Object> channel = new HashMap<>();
 		channel.put("context", mTelepatContext.getId());
 		channel.put("model", mModelName);
+		if(mSingleObjectId != null) channel.put("id", mSingleObjectId);
+		if(mParentId!=null && mParentModelName!=null) {
+			HashMap<String, String> parent = new HashMap<>();
+			parent.put("id", mParentId);
+			parent.put("model", mParentModelName);
+			requestBody.put("parent", parent);
+		}
+		if(mUserId!=null) channel.put("user", mUserId);
 		requestBody.put("channel", channel);
+		if(mFilters != null) requestBody.put("filters", mFilters);
 		return requestBody;
 	}
 
@@ -214,7 +241,7 @@ public class Channel implements PropertyChangeListener {
 
 							@Override
 							public void failure(RetrofitError error) {
-								TelepatLogger.log("Unsubscribe failed: "+error.getMessage());
+								TelepatLogger.log("Unsubscribe failed: " + error.getMessage());
 							}
 						});
 	}
@@ -254,29 +281,68 @@ public class Channel implements PropertyChangeListener {
 	 * @return
 	 */
 	public String getSubscriptionIdentifier() {
-		/*
-		 var key = 'blg:'+channel.context+':'+Application.loadedAppModels[appId][channel.model].namespace;
+    /*
+    4:  "blg:{appId}:{model}",                                 //channel
+    used for built-in models (users, contexts)
+    5:  "blg:{appId}:context:{context}:{model}",
+    //the Channel of all objects from a context
+    7:  "blg:{appId}:context:{context}:users:{user_id}:{model}",
+    //the Channel of all objects from a context from an user
+    12: "blg:{appId}:{parent_model}:{parent_id}:{model}",            //the
+    Channel of all objects belong to a parent
+    14: "blg:{appId}:users:{user_id}:{parent_model}:{parent_id}:{model}",//the
+    Channel of all comments from event 1 from user 16
+    20: "blg:{appId}:{model}:{id}",                            //the
+    Channel of one item
+    var key = 'blg:'+API.appId;
+    if (!options.channel.id && options.channel.context) {
+      key += ':context:'+options.channel.context;
+    }
+    if (options.channel.user) {
+      key += ':users:'+options.channel.user;
+    }
+    key += ':'+options.channel.model;
+    if (options.channel.id) {
+      key += ':'+options.channel.id;
+    }
+    return key;
+    */
 
- if (channel.id) {
-  key += ':'+channel.id;
+		if(mModelName == null) return null;
 
-  return key;
- }
+		String identifier = "blg:"+Telepat.getInstance().getAppId();
+		if(mSingleObjectId == null && mTelepatContext!=null) {
+			identifier += ":context:"+mTelepatContext.getId();
+		}
 
- if (channel.user)
-  key += ':users:'+user;
- if (channel.parent)
-  key += ':'+channel.parent.model+':'+channel.parent.id;
+		if( mUserId != null) {
+			identifier+= ":users:"+mUserId;
+		}
 
- if (extraFilters)
-  key += ':filters:'+(new Buffer(JSON.stringify(utils.parseQueryObject(extraFilters)))).toString('base64');
+		if( mParentModelName!=null && mParentId!=null) {
+			identifier+=":"+mParentModelName+":"+mParentId;
+		}
 
- return key;
-}
+		identifier += ":"+mModelName;
 
-		 */
-		if(mTelepatContext == null || mModelName == null) return null;
-		return "blg:"+Telepat.getInstance().getAppId()+":context:"+mTelepatContext.getId()+':'+mModelName;
+		if(mSingleObjectId != null) {
+			identifier += ":"+mSingleObjectId;
+		}
+
+		if(mFilters != null) {
+			Gson gson = new Gson();
+			String jsonFilters = gson.toJson(mFilters);
+			byte[] data = new byte[0];
+			try {
+				data = jsonFilters.getBytes("UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			String base64Filters = Base64.encodeToString(data, Base64.NO_WRAP);
+			identifier += ":filter:"+base64Filters;
+		}
+//		return "blg:"+Telepat.getInstance().getAppId()+":context:"+mTelepatContext.getId()+':'+mModelName;
+		return identifier;
 		//TODO add support for more channel params
 	}
 

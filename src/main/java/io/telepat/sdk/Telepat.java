@@ -2,16 +2,19 @@ package io.telepat.sdk;
 
 import android.content.Context;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
+import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.UserCreateListener;
-import io.telepat.sdk.models.UserLoginListener;
+import io.telepat.sdk.models.TelepatRequestListener;
+import io.telepat.sdk.models.UserUpdatePatch;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
@@ -62,6 +65,10 @@ public final class Telepat
 	 * Locally registered Channel instances
 	 */
 	private HashMap<String, Channel> subscriptions = new HashMap<>();
+	/**
+	 * Context update listener array
+	 */
+	private ArrayList<ContextUpdateListener> contextUpdateListeners = new ArrayList<>();
 	/**
 	 * Unique device identifier
 	 */
@@ -208,7 +215,7 @@ public final class Telepat
      * Send a Telepat Sync API call for logging in a user
      * @param fbToken A Facebook OAUTH token
      */
-	public void register(final String fbToken)
+	public void register(final String fbToken, final TelepatRequestListener loginListener)
 	{
 		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
 		apiClient.registerAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<Map<String, String>>() {
@@ -220,13 +227,16 @@ public final class Telepat
 					public void success(GenericApiResponse genericApiResponse, Response response) {
 						internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
 						internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+						internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
 						requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
 						TelepatLogger.log("User logged in");
+						loginListener.onSuccess();
 					}
 
 					@Override
 					public void failure(RetrofitError error) {
 						TelepatLogger.log("User login failed.");
+						loginListener.onError(error);
 					}
 				});
 
@@ -240,13 +250,16 @@ public final class Telepat
 						public void success(GenericApiResponse genericApiResponse, Response response) {
 							internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
 							internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+							internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
 							requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
 							TelepatLogger.log("User logged in -- existing user");
+							loginListener.onSuccess();
 						}
 
 						@Override
 						public void failure(RetrofitError error) {
 							TelepatLogger.log("User login failed - " + error.getMessage());
+							loginListener.onError(error);
 						}
 					});
 				} else {
@@ -267,6 +280,7 @@ public final class Telepat
 		if(email!=null && password!=null && name!=null) {
 			HashMap<String, String> userHash = new HashMap<>();
 			userHash.put("username", email);
+			userHash.put("email", email);
 			userHash.put("password", password);
 			userHash.put("name", name);
 			apiClient.createUserWithEmailAndPassword(userHash, new Callback<Map<String, String>>() {
@@ -283,7 +297,7 @@ public final class Telepat
 		}
 	}
 
-	public void loginWithUsername(final String email, final String password, final UserLoginListener listener) {
+	public void loginWithUsername(final String email, final String password, final TelepatRequestListener listener) {
 		if(email != null && password != null) {
 			HashMap<String, String> userHash = new HashMap<>();
 			userHash.put("username", email);
@@ -292,18 +306,22 @@ public final class Telepat
 				@Override
 				public void success(GenericApiResponse genericApiResponse, Response response) {
 					TelepatLogger.log("Login successful");
+					internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
+					requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
+					listener.onSuccess();
 				}
 
 				@Override
 				public void failure(RetrofitError error) {
 					TelepatLogger.log("Login failed");
+					listener.onError(error);
 				}
 			});
 		}
 	}
 
     /**
-     * Send a Telepat Sync API call for logging out the current user.
+     * Send a Telepat Sync API call for logging out the current user. The method will return null if there is no currently logged in user.
      */
 	public void logout()
 	{
@@ -317,6 +335,70 @@ public final class Telepat
 			@Override
 			public void failure(RetrofitError error) {
 				TelepatLogger.error("user logout failed - " + error.getMessage());
+			}
+		});
+	}
+
+	/**
+	 * Get information about the currently logged in user
+	 * @return a HashMap of the user data.
+	 */
+	public Map<String, Object> getLoggedInUserInfo() {
+		Object userData = internalDB.getOperationsData(TelepatConstants.CURRENT_USER_DATA, null, HashMap.class);
+		if(userData instanceof HashMap) {
+			//noinspection unchecked
+			return (HashMap<String, Object>) userData;
+		} else {
+			TelepatLogger.error("Not a hashmap");
+			return null;
+		}
+	}
+
+	/**
+	 * Request a password reset email
+	 */
+	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
+		HashMap<String, String> requestBody = new HashMap<>();
+		requestBody.put("username", username);
+		requestBody.put("type", "app");
+		apiClient.requestPasswordReset(requestBody, new Callback<GenericApiResponse>() {
+			@Override
+			public void success(GenericApiResponse genericApiResponse, Response response) {
+				TelepatLogger.log("Reset email sent");
+				listener.onSuccess();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				TelepatLogger.log("Reset request failed");
+				listener.onError(error);
+			}
+		});
+	}
+
+	/**
+	 * Commit password change request
+	 * @param userId the user ID
+	 * @param token the token received via the reset email / deep-link
+	 * @param newPassword
+	 * @param listener
+	 */
+	public void resetPassword(String userId, String token, String newPassword, final TelepatRequestListener listener) {
+		HashMap<String, String> requestBody = new HashMap<>();
+		requestBody.put("user_id", userId);
+		requestBody.put("token", token);
+		requestBody.put("password", newPassword);
+		apiClient.resetPassword(requestBody, new Callback<GenericApiResponse>() {
+			@Override
+			public void success(GenericApiResponse genericApiResponse, Response response) {
+				TelepatLogger.log("Password was reset");
+				listener.onSuccess();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				TelepatLogger.log("Password reset failed");
+				listener.onError(error);
 			}
 		});
 	}
@@ -339,6 +421,29 @@ public final class Telepat
                 setObjectType(type).
                 build();
 //		subscriptions.put(channel.getSubscriptionIdentifier(), channel);
+		channel.subscribe();
+		return channel;
+	}
+
+	public Channel subscribe(TelepatContext context,
+							 String modelName,
+							 String objectId,
+							 String userId,
+							 String parentModelName,
+							 String parentId,
+							 HashMap<String, Object> filters,
+							 Class type,
+							 OnChannelEventListener listener) {
+		Channel channel = new Channel.Builder()
+				.setContext(context)
+				.setModelName(modelName)
+				.setUserFilter(userId)
+				.setSingleObjectIdFilter(objectId)
+				.setParentFilter(parentModelName, parentId)
+				.setFilters(filters)
+				.setObjectType(type)
+				.setChannelEventListener(listener)
+				.build();
 		channel.subscribe();
 		return channel;
 	}
@@ -402,6 +507,64 @@ public final class Telepat
      */
 	public void setDeviceLocalIdentifier(String udid) {
 		internalDB.setOperationsData(TelepatConstants.LOCAL_UDID_KEY, udid);
+	}
+
+	public void registerContextUpdateListener(ContextUpdateListener listener) {
+		this.contextUpdateListeners.add(listener);
+	}
+
+	public void removeContextUpdateListener(ContextUpdateListener listener) {
+		this.contextUpdateListeners.remove(listener);
+	}
+
+	public void updateUser(final ArrayList<UserUpdatePatch> userChanges, String userId, final TelepatRequestListener listener) {
+		HashMap<String, Object> requestBody = new HashMap<>();
+		ArrayList<HashMap<String, String>> jsonPatches = new ArrayList<>();
+		for(UserUpdatePatch patch : userChanges) {
+			HashMap<String, String> jsonPatch = new HashMap<>();
+			jsonPatch.put("op", "replace");
+			jsonPatch.put("path", "user/"+userId+"/"+patch.getFieldName());
+			jsonPatch.put("value", patch.getFieldValue());
+			jsonPatches.add(jsonPatch);
+		}
+		requestBody.put("patches", jsonPatches);
+		apiClient.updateUser(requestBody, new Callback<HashMap<String, String>>() {
+			@Override
+			public void success(HashMap<String, String> genericApiResponse, Response response) {
+				TelepatLogger.log("User update successful");
+				if (getLoggedInUserInfo() != null) {
+					HashMap<String, Object> userData = new HashMap<>(getLoggedInUserInfo());
+					for (UserUpdatePatch patch : userChanges) {
+						userData.put(patch.getFieldName(), patch.getFieldValue());
+					}
+					internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, userData);
+				}
+				listener.onSuccess();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				TelepatLogger.log("User update failed");
+				listener.onError(error);
+			}
+		});
+	}
+
+	@Deprecated
+	public void fireTextContextUpdate() {
+		if (this.mServerContexts.size() > 0) {
+			TelepatContext updatedContext = null;
+			//noinspection LoopStatementThatDoesntLoop
+			for(TelepatContext ctx : this.mServerContexts.values()) {
+				updatedContext = ctx;
+				break;
+			}
+			for (ContextUpdateListener listener : this.contextUpdateListeners) {
+				listener.contextAdded(updatedContext);
+				listener.contextUpdated(updatedContext);
+				listener.contextEnded(updatedContext);
+			}
+		}
 	}
 
 	public String getAppId() {
