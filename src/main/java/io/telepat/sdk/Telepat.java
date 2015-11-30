@@ -2,6 +2,10 @@ package io.telepat.sdk;
 
 import android.content.Context;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +17,9 @@ import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.models.TelepatContext;
-import io.telepat.sdk.models.UserCreateListener;
 import io.telepat.sdk.models.TelepatRequestListener;
+import io.telepat.sdk.models.TransportNotification;
+import io.telepat.sdk.models.UserCreateListener;
 import io.telepat.sdk.models.UserUpdatePatch;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
@@ -604,6 +609,52 @@ public final class Telepat
 				listener.onError(error);
 			}
 		});
+	}
+
+	public void fireContextUpdate(TransportNotification notification) {
+		Gson gson = new Gson();
+		TelepatContext ctx;
+		String contextId;
+		switch (notification.getNotificationType()) {
+			case ObjectAdded:
+				ctx = gson.fromJson(notification.getNotificationValue(), TelepatContext.class);
+				mServerContexts.put(ctx.getId(), ctx);
+				for (ContextUpdateListener listener : this.contextUpdateListeners) {
+					listener.contextAdded(ctx);
+				}
+				break;
+			case ObjectUpdated:
+				String[] pathSegments = notification.getNotificationPath().getAsString().replace("context/", "").split("/");
+				contextId = pathSegments[0];
+				String fieldName = pathSegments[1];
+				if(mServerContexts.containsKey(contextId)) {
+					ctx = mServerContexts.get(contextId);
+					switch (fieldName) {
+						case "meta":
+							Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
+							HashMap<String, Object> meta = gson.fromJson(notification.getNotificationValue().toString(), type);
+							ctx.setMeta(meta);
+							break;
+						case "name":
+							ctx.setName(notification.getNotificationValue().getAsString());
+					}
+					mServerContexts.put(ctx.getId(), ctx);
+					for (ContextUpdateListener listener : this.contextUpdateListeners) {
+						listener.contextUpdated(ctx);
+					}
+				}
+				break;
+			case ObjectDeleted:
+				contextId = notification.getNotificationPath().getAsString().replace("context/","");
+				if(mServerContexts.containsKey(contextId)) {
+					ctx = mServerContexts.get(contextId);
+					mServerContexts.remove(contextId);
+					for (ContextUpdateListener listener : this.contextUpdateListeners) {
+						listener.contextEnded(ctx);
+					}
+				}
+				break;
+		}
 	}
 
 	@Deprecated
