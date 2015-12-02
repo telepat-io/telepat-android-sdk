@@ -368,7 +368,7 @@ public final class Telepat
 	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("username", username);
-		requestBody.put("type", "app");
+		requestBody.put("type", "android");
 		apiClient.requestPasswordReset(requestBody, new Callback<GenericApiResponse>() {
 			@Override
 			public void success(GenericApiResponse genericApiResponse, Response response) {
@@ -495,10 +495,10 @@ public final class Telepat
 		requestBody.put("channel", channel);
 		if(filters != null) requestBody.put("filters", filters);
 
-		apiClient.count(requestBody, new Callback<HashMap<String, String>>() {
+		apiClient.count(requestBody, new Callback<GenericApiResponse>() {
 			@Override
-			public void success(HashMap<String, String> genericApiResponse, Response response) {
-				callback.onSuccess(Integer.valueOf(genericApiResponse.get("content")));
+			public void success(GenericApiResponse genericApiResponse, Response response) {
+				callback.onSuccess(((Double)genericApiResponse.content.get("count")).intValue());
 			}
 
 			@Override

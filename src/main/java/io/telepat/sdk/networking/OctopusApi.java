@@ -108,7 +108,7 @@ public interface OctopusApi {
     void subscribe(@Body Map<String, Object> body, Callback<HashMap<String, JsonElement>> cb);
 
     @POST("/object/count")
-    void count(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
+    void count(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending an unsubscribe request
