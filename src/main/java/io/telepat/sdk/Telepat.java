@@ -369,9 +369,9 @@ public final class Telepat
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("username", username);
 		requestBody.put("type", "android");
-		apiClient.requestPasswordReset(requestBody, new Callback<GenericApiResponse>() {
+		apiClient.requestPasswordReset(requestBody, new Callback<HashMap<String, String>>() {
 			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
+			public void success(HashMap<String, String> genericApiResponse, Response response) {
 				TelepatLogger.log("Reset email sent");
 				listener.onSuccess();
 			}
@@ -396,9 +396,9 @@ public final class Telepat
 		requestBody.put("user_id", userId);
 		requestBody.put("token", token);
 		requestBody.put("password", newPassword);
-		apiClient.resetPassword(requestBody, new Callback<GenericApiResponse>() {
+		apiClient.resetPassword(requestBody, new Callback<HashMap<String, String>>() {
 			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
+			public void success(HashMap<String, String> genericApiResponse, Response response) {
 				TelepatLogger.log("Password was reset");
 				listener.onSuccess();
 			}
