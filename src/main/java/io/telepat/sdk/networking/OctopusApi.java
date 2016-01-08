@@ -2,13 +2,10 @@ package io.telepat.sdk.networking;
 
 import com.google.gson.JsonElement;
 
-import io.telepat.sdk.models.TelepatContext;
-import io.telepat.sdk.networking.responses.ContextsApiResponse;
-import io.telepat.sdk.networking.responses.RegisterDeviceResponse;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.GenericApiResponse;
 import retrofit.Callback;
 import retrofit.http.Body;
@@ -89,7 +86,7 @@ public interface OctopusApi {
      * @param cb
      */
     @POST("/user/request_password_reset")
-    void requestPasswordReset(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+    void requestPasswordReset(@Body Map<String, String> body, Callback<HashMap<String, String>> cb);
 
     /**
      * Method for changing a user authentication password
@@ -97,7 +94,7 @@ public interface OctopusApi {
      * @param cb
      */
     @POST("/user/password_reset")
-    void resetPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+    void resetPassword(@Body Map<String, String> body, Callback<HashMap<String, String>> cb);
 
     @POST("/user/update")
     void updateUser(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
@@ -109,6 +106,9 @@ public interface OctopusApi {
      */
     @POST("/object/subscribe")
     void subscribe(@Body Map<String, Object> body, Callback<HashMap<String, JsonElement>> cb);
+
+    @POST("/object/count")
+    void count(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending an unsubscribe request

@@ -83,6 +83,7 @@ public class Channel implements PropertyChangeListener {
 	public Channel(String identifier) {
 		String[] identifierSegments = identifier.split(":");
 		String contextId = identifierSegments[1];
+		if(Telepat.getInstance().getContexts()==null) return;
 		this.mTelepatContext = Telepat.getInstance().getContexts().get(contextId);
 		this.mModelName = identifierSegments[2];
 		this.objectType = TelepatBaseModel.class;

@@ -2,18 +2,24 @@ package io.telepat.sdk;
 
 import android.content.Context;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.telepat.BuildConfig;
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.models.TelepatContext;
-import io.telepat.sdk.models.UserCreateListener;
 import io.telepat.sdk.models.TelepatRequestListener;
+import io.telepat.sdk.models.TransportNotification;
+import io.telepat.sdk.models.UserCreateListener;
 import io.telepat.sdk.models.UserUpdatePatch;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
@@ -21,6 +27,7 @@ import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
 import io.telepat.sdk.networking.requests.RegisterUserRequest;
 import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.GenericApiResponse;
+import io.telepat.sdk.networking.responses.TelepatCountCallback;
 import io.telepat.sdk.networking.transports.gcm.GcmRegistrar;
 import io.telepat.sdk.utilities.TelepatConstants;
 import io.telepat.sdk.utilities.TelepatLogger;
@@ -120,6 +127,7 @@ public final class Telepat
 		initHTTPClient(telepatEndpoint, clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
 		updateContexts();
+		TelepatLogger.log("Initialized Telepat Android SDK version "+ BuildConfig.VERSION_NAME);
 	}
 
     /**
@@ -360,10 +368,10 @@ public final class Telepat
 	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("username", username);
-		requestBody.put("type", "app");
-		apiClient.requestPasswordReset(requestBody, new Callback<GenericApiResponse>() {
+		requestBody.put("type", "android");
+		apiClient.requestPasswordReset(requestBody, new Callback<HashMap<String, String>>() {
 			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
+			public void success(HashMap<String, String> genericApiResponse, Response response) {
 				TelepatLogger.log("Reset email sent");
 				listener.onSuccess();
 			}
@@ -388,9 +396,9 @@ public final class Telepat
 		requestBody.put("user_id", userId);
 		requestBody.put("token", token);
 		requestBody.put("password", newPassword);
-		apiClient.resetPassword(requestBody, new Callback<GenericApiResponse>() {
+		apiClient.resetPassword(requestBody, new Callback<HashMap<String, String>>() {
 			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
+			public void success(HashMap<String, String> genericApiResponse, Response response) {
 				TelepatLogger.log("Password was reset");
 				listener.onSuccess();
 			}
@@ -425,6 +433,21 @@ public final class Telepat
 		return channel;
 	}
 
+	/**
+	 * Create a new subscription to a Telepat channel
+	 * @param context The context ID where the desired objects live in
+	 * @param modelName The model name of the desired objects
+	 * @param objectId The ID of an object to subscribe to. Can be null if not used.
+	 * @param userId The user ID to filter results by. Can be null if not used.
+	 * @param parentModelName The parent model name to filter results by. Can be null if not used.
+	 * @param parentId The parent object ID to filter results by. Can be null if not used.
+	 * @param filters A HashMap of filters. See http://docs.telepat.io/api.html#api-Object-ObjectSubscribe for details. Can be null if not used.
+	 * @param type The desired Java class of the objects that will be emitted in this channel (should
+	 *             extend the TelepatBaseModel class)
+	 * @param listener An object implementing OnChannelEventListener. All channel events will be sent
+	 *                 to this object.
+	 * @return a <code>Channel</code> object with the specified characteristics
+	 */
 	public Channel subscribe(TelepatContext context,
 							 String modelName,
 							 String objectId,
@@ -446,6 +469,44 @@ public final class Telepat
 				.build();
 		channel.subscribe();
 		return channel;
+	}
+
+	public void count(TelepatContext context,
+					  String modelName,
+					  String objectId,
+					  String userId,
+					  String parentModelName,
+					  String parentId,
+					  HashMap<String, Object> filters,
+					  final TelepatCountCallback callback) {
+
+		HashMap<String, Object> requestBody = new HashMap<>();
+		HashMap<String, Object> channel = new HashMap<>();
+		channel.put("context", context.getId());
+		channel.put("model", modelName);
+		if(objectId != null) channel.put("id", objectId);
+		if(parentId!=null && parentModelName!=null) {
+			HashMap<String, String> parent = new HashMap<>();
+			parent.put("id", parentId);
+			parent.put("model", parentModelName);
+			requestBody.put("parent", parent);
+		}
+		if(userId!=null) channel.put("user", userId);
+		requestBody.put("channel", channel);
+		if(filters != null) requestBody.put("filters", filters);
+
+		apiClient.count(requestBody, new Callback<GenericApiResponse>() {
+			@Override
+			public void success(GenericApiResponse genericApiResponse, Response response) {
+				callback.onSuccess(((Double)genericApiResponse.content.get("count")).intValue());
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				callback.onFailure(error);
+			}
+		});
+
 	}
 
     /**
@@ -548,6 +609,52 @@ public final class Telepat
 				listener.onError(error);
 			}
 		});
+	}
+
+	public void fireContextUpdate(TransportNotification notification) {
+		Gson gson = new Gson();
+		TelepatContext ctx;
+		String contextId;
+		switch (notification.getNotificationType()) {
+			case ObjectAdded:
+				ctx = gson.fromJson(notification.getNotificationValue(), TelepatContext.class);
+				mServerContexts.put(ctx.getId(), ctx);
+				for (ContextUpdateListener listener : this.contextUpdateListeners) {
+					listener.contextAdded(ctx);
+				}
+				break;
+			case ObjectUpdated:
+				String[] pathSegments = notification.getNotificationPath().getAsString().replace("context/", "").split("/");
+				contextId = pathSegments[0];
+				String fieldName = pathSegments[1];
+				if(mServerContexts.containsKey(contextId)) {
+					ctx = mServerContexts.get(contextId);
+					switch (fieldName) {
+						case "meta":
+							Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
+							HashMap<String, Object> meta = gson.fromJson(notification.getNotificationValue().toString(), type);
+							ctx.setMeta(meta);
+							break;
+						case "name":
+							ctx.setName(notification.getNotificationValue().getAsString());
+					}
+					mServerContexts.put(ctx.getId(), ctx);
+					for (ContextUpdateListener listener : this.contextUpdateListeners) {
+						listener.contextUpdated(ctx);
+					}
+				}
+				break;
+			case ObjectDeleted:
+				contextId = notification.getNotificationPath().getAsString().replace("context/","");
+				if(mServerContexts.containsKey(contextId)) {
+					ctx = mServerContexts.get(contextId);
+					mServerContexts.remove(contextId);
+					for (ContextUpdateListener listener : this.contextUpdateListeners) {
+						listener.contextEnded(ctx);
+					}
+				}
+				break;
+		}
 	}
 
 	@Deprecated

@@ -2,18 +2,11 @@ package io.telepat.sdk.networking.transports.gcm;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Bundle;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.JsonPatchException;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import java.io.IOException;
 
 import io.telepat.sdk.Telepat;
 import io.telepat.sdk.models.Channel;
@@ -63,12 +56,16 @@ public class GcmIntentService extends IntentService
 			if(notificationObject.isJsonObject()) {
 				TransportNotification notification = new TransportNotification((JsonObject)notificationObject, notificationType);
 				String channelIdentifier = ((JsonObject)notificationObject).get("subscription").getAsString();
-				Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
-				if(channel != null) channel.processNotification(notification);
-				else {
-					TelepatLogger.error("No local channel instance available");
-					channel = new Channel(channelIdentifier);
-                    channel.processNotification(notification);
+				if(channelIdentifier.endsWith(":context")) {
+					Telepat.getInstance().fireContextUpdate(notification);
+				} else {
+					Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
+					if (channel != null) channel.processNotification(notification);
+					else {
+						TelepatLogger.error("No local channel instance available");
+						channel = new Channel(channelIdentifier);
+						channel.processNotification(notification);
+					}
 				}
 			}
 		}

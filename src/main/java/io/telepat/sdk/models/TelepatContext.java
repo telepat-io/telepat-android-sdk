@@ -15,7 +15,6 @@ public class TelepatContext
 	private String 	application_id;
 	private String	id;
 	private String name;
-
 	private HashMap<String, Object> meta;
 
 	public String getId()
