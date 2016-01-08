@@ -378,9 +378,11 @@ public class Channel implements PropertyChangeListener {
 		String[] pathSegments;
 		String modelName;
 		String objectId;
+		if(notification==null || notification.getNotificationType()==null) return;
 
 		switch (notification.getNotificationType()) {
 			case ObjectAdded:
+				if(notification.getNotificationValue()==null) return;
 				TelepatBaseModel dataObject = (TelepatBaseModel) gson.fromJson(notification.getNotificationValue(), this.objectType);
 				if(waitingForCreation.containsKey(dataObject.getUuid())) {
 					waitingForCreation.get(dataObject.getUuid()).setId(dataObject.getId());
@@ -401,6 +403,7 @@ public class Channel implements PropertyChangeListener {
 				persistObject(dataObject);
 				break;
 			case ObjectUpdated:
+				if(notification.getNotificationValue()==null || notification.getNotificationPath()==null) return;
 				TelepatLogger.log("Object updated: " +
 						notification.getNotificationValue().toString() +
 						" with path: " + notification.getNotificationPath().toString());
@@ -421,18 +424,30 @@ public class Channel implements PropertyChangeListener {
 					TelepatBaseModel updatedObject = dbInstance.getObject(getSubscriptionIdentifier(),
 																		  objectId,
 																		  objectType);
-					updatedObject.setProperty(propertyName,
-											  notification.getNotificationValue().getAsString());
+					String propertyValue = null;
 
+					if(notification.getNotificationValue().isJsonPrimitive()) {
+						propertyValue = notification.getNotificationValue().getAsString();
+						updatedObject.setProperty(propertyName, propertyValue);
+					} else if(notification.getNotificationValue().isJsonObject()) {
+						TelepatLogger.log(propertyName + " is a json object. Please update your object accordingly in the listener call. ");
+						propertyValue = notification.getNotificationValue().getAsJsonObject().toString();
+					} else if(notification.getNotificationValue().isJsonArray()) {
+						TelepatLogger.log(propertyName+" is a json array. Please update your object accordingly in the listener call.");
+						propertyValue = notification.getNotificationValue().getAsJsonArray().toString();
+					}
+
+					TelepatLogger.log("Pushing changed value to listeners: "+propertyValue);
 					if(mChannelEventListener != null) {
 						mChannelEventListener.onObjectModified(updatedObject,
 															   propertyName,
-															   notification.getNotificationValue().getAsString());
+															   propertyValue);
 					}
 					dbInstance.persistObject(getSubscriptionIdentifier(), updatedObject);
 				}
 				break;
 			case ObjectDeleted:
+				if(notification.getNotificationValue()==null || notification.getNotificationPath()==null) return;
 				TelepatLogger.log("Object deleted "+
 						" with path: " + notification.getNotificationPath().toString());
 				pathSegments = notification.getNotificationPath().getAsString().split("/");
