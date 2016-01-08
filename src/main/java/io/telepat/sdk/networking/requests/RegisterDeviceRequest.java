@@ -29,11 +29,12 @@ public class RegisterDeviceRequest
 	public Map<String, Object> getParams()
 	{
 		HashMap<String, Object> params = new HashMap<>();
-		HashMap<String, String> tokenData = new HashMap<>();
+		HashMap<String, Object> tokenData = new HashMap<>();
 		HashMap<String, String> deviceInfo = new HashMap<>();
 
 		tokenData.put("type", "android");
 		tokenData.put("token", mRegId);
+		tokenData.put("active", 1);
 
 		deviceInfo.put("os", "Android");
 		deviceInfo.put("udid", String.valueOf(System.currentTimeMillis()));
