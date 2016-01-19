@@ -299,7 +299,7 @@ public final class Telepat
 
 				@Override
 				public void failure(RetrofitError error) {
-					listener.onUserCreateFailure();
+					listener.onUserCreateFailure(error);
 				}
 			});
 		}

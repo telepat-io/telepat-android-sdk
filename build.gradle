@@ -46,4 +46,4 @@ dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.5.0'
 }
 
-apply from: "../upload_archives_task.gradle"
+//apply from: "../upload_archives_task.gradle"
