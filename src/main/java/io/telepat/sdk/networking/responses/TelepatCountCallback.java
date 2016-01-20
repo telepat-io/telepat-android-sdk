@@ -7,6 +7,6 @@ import retrofit.RetrofitError;
  *
  */
 public interface TelepatCountCallback {
-    void onSuccess(int number);
+    void onSuccess(int number, Double aggregationResult);
     void onFailure(RetrofitError error);
 }
