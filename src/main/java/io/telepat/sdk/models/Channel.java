@@ -356,7 +356,7 @@ public class Channel implements PropertyChangeListener {
 		if(mModelName == null) return null;
 
 		String identifier = "blg:"+Telepat.getInstance().getAppId();
-		if(mSingleObjectId == null && mTelepatContext!=null) {
+		if((mSingleObjectId == null && mParentId == null) && mTelepatContext!=null) {
 			identifier += ":context:"+mTelepatContext.getId();
 		}
 
@@ -466,8 +466,8 @@ public class Channel implements PropertyChangeListener {
 
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
 					TelepatBaseModel updatedObject = dbInstance.getObject(getSubscriptionIdentifier(),
-																		  objectId,
-																		  objectType);
+							objectId,
+							objectType);
 					String propertyValue = null;
 
 					if(notification.getNotificationValue().isJsonPrimitive()) {
@@ -484,8 +484,8 @@ public class Channel implements PropertyChangeListener {
 					TelepatLogger.log("Pushing changed value to listeners: "+propertyValue);
 					if(mChannelEventListener != null) {
 						mChannelEventListener.onObjectModified(updatedObject,
-															   propertyName,
-															   propertyValue);
+								propertyName,
+								propertyValue);
 					}
 					dbInstance.persistObject(getSubscriptionIdentifier(), updatedObject);
 				}
@@ -502,8 +502,8 @@ public class Channel implements PropertyChangeListener {
 				TelepatBaseModel deletedObject = null;
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
 					deletedObject = dbInstance.getObject(getSubscriptionIdentifier(),
-														 objectId,
-														 objectType);
+							objectId,
+							objectType);
 					dbInstance.deleteObject(getSubscriptionIdentifier(), deletedObject);
 				}
 				if(mChannelEventListener != null) {
