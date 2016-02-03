@@ -359,6 +359,14 @@ public class Channel implements PropertyChangeListener {
 		}
 	}
 
+	public List<TelepatBaseModel> getChannelObjects() {
+		return dbInstance.getChannelObjects(getSubscriptionIdentifier(), this.objectType);
+	}
+
+	public TelepatBaseModel getObject(String id) {
+		return dbInstance.getObject(getSubscriptionIdentifier(), id, this.objectType);
+	}
+
 	/**
 	 * Save an object to the internal DB
 	 * @param object An object of a class extending TelepatBaseModel
