@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version '0.2.18'
+version '0.2.21'
 group = "io.telepat"
 project.ext.artifactId = "telepat-android-sdk"
 project.ext.projectName = "Telepat Android SDK"
@@ -16,8 +16,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 26
-        versionName "0.2.18"
+        versionCode 29
+        versionName "0.2.21"
     }
 
     //noinspection GroovyAssignabilityCheck
@@ -46,4 +46,4 @@ dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.5.0'
 }
 
-//apply from: "../upload_archives_task.gradle"
+apply from: "../upload_archives_task.gradle"

@@ -17,6 +17,8 @@ import io.telepat.sdk.Telepat;
 import io.telepat.sdk.data.TelepatInternalDB;
 import io.telepat.sdk.networking.CrudOperationsCallback;
 import io.telepat.sdk.networking.OctopusApi;
+import io.telepat.sdk.networking.responses.GenericApiResponse;
+import io.telepat.sdk.networking.responses.TelepatCountCallback;
 import io.telepat.sdk.utilities.TelepatLogger;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -49,6 +51,12 @@ public class Channel implements PropertyChangeListener {
 		ObjectAdded,
 		ObjectUpdated,
 		ObjectDeleted
+	}
+
+	public enum AggregationType {
+		AverageAggregation,
+		SumAggregation,
+		None
 	}
 
 	/**
@@ -119,44 +127,79 @@ public class Channel implements PropertyChangeListener {
 	 * If the device is already registered, the stored objects will be notified again.
 	 */
 	public void subscribe() {
-		Telepat.getInstance()
-				.getAPIInstance()
-				.subscribe(
-						getSubscribingRequestBody(),
-						new Callback<HashMap<String, JsonElement>>() {
-							@Override
-							public void success(
-									HashMap<String, JsonElement> responseHashMap,
-									Response response) {
+		apiInstance.subscribe(
+				getSubscribingRequestBody(),
+				new Callback<HashMap<String, JsonElement>>() {
+					@Override
+					public void success(
+							HashMap<String, JsonElement> responseHashMap,
+							Response response) {
 
-								Integer status = Integer.parseInt(responseHashMap.get("status").toString());
-								JsonElement message = responseHashMap.get("content");
+						Integer status = Integer.parseInt(responseHashMap.get("status").toString());
+						JsonElement message = responseHashMap.get("content");
 
-								if (status == 200) {
-									Telepat.getInstance().registerSubscription(Channel.this);
+						if (status == 200) {
+							Telepat.getInstance().registerSubscription(Channel.this);
 
-									for (JsonElement entry
-											: message.getAsJsonArray()) {
-										processNotification(new TransportNotification(entry));
-									}
-
-								} else {
-									if (Channel.this.mChannelEventListener != null)
-										Channel.this.mChannelEventListener.onError(status, message.toString());
-								}
+							for (JsonElement entry
+									: message.getAsJsonArray()) {
+								processNotification(new TransportNotification(entry));
 							}
 
-							@Override
-							public void failure(RetrofitError error) {
-								if (error.getMessage().startsWith("409")) {
-									TelepatLogger.log("There is an already active subscription for this channel.");
-								} else if (error.getMessage().startsWith("401")) {
-									TelepatLogger.log("Not logged in.");
-								} else {
-									TelepatLogger.log("Error subscribing: " + error.getMessage());
-								}
-							}
-						});
+						} else {
+							if (Channel.this.mChannelEventListener != null)
+								Channel.this.mChannelEventListener.onError(status, message.toString());
+						}
+					}
+
+					@Override
+					public void failure(RetrofitError error) {
+						if (error.getMessage().startsWith("409")) {
+							TelepatLogger.log("There is an already active subscription for this channel.");
+						} else if (error.getMessage().startsWith("401")) {
+							TelepatLogger.log("Not logged in.");
+						} else {
+							TelepatLogger.log("Error subscribing: " + error.getMessage());
+						}
+					}
+				});
+	}
+
+	public void count(final TelepatCountCallback callback, AggregationType aggregationType, String aggregationField) {
+		HashMap<String, Object> countRequestBody = getSubscribingRequestBody();
+		if(aggregationType != null && aggregationField != null) {
+			HashMap<String, Object> aggregationHash = new HashMap<>();
+			HashMap<String, String> aggregationFieldHash = new HashMap<>();
+			aggregationFieldHash.put("field", aggregationField);
+			switch (aggregationType) {
+				case AverageAggregation:
+					aggregationHash.put("avg", aggregationFieldHash);
+					countRequestBody.put("aggregation", aggregationHash);
+					break;
+				case SumAggregation:
+					aggregationHash.put("sum", aggregationFieldHash);
+					countRequestBody.put("aggregation", aggregationHash);
+					break;
+				case None:
+				default:
+					break;
+			}
+		}
+		apiInstance.count(
+				countRequestBody,
+				new Callback<GenericApiResponse>() {
+					@Override
+					public void success(GenericApiResponse genericApiResponse, Response response) {
+						int countValue = ((Double) genericApiResponse.content.get("count")).intValue();
+						Double aggregationValue = ((Double) genericApiResponse.content.get("aggregation"));
+						callback.onSuccess(countValue, aggregationValue);
+					}
+
+					@Override
+					public void failure(RetrofitError error) {
+						callback.onFailure(error);
+					}
+				});
 	}
 
 	/**
@@ -167,14 +210,15 @@ public class Channel implements PropertyChangeListener {
 	public HashMap<String, Object> getSubscribingRequestBody() {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		HashMap<String, Object> channel = new HashMap<>();
-		channel.put("context", mTelepatContext.getId());
+		if(mParentModelName == null)
+			channel.put("context", mTelepatContext.getId());
 		channel.put("model", mModelName);
 		if(mSingleObjectId != null) channel.put("id", mSingleObjectId);
 		if(mParentId!=null && mParentModelName!=null) {
 			HashMap<String, String> parent = new HashMap<>();
 			parent.put("id", mParentId);
 			parent.put("model", mParentModelName);
-			requestBody.put("parent", parent);
+			channel.put("parent", parent);
 		}
 		if(mUserId!=null) channel.put("user", mUserId);
 		requestBody.put("channel", channel);
@@ -312,7 +356,7 @@ public class Channel implements PropertyChangeListener {
 		if(mModelName == null) return null;
 
 		String identifier = "blg:"+Telepat.getInstance().getAppId();
-		if(mSingleObjectId == null && mTelepatContext!=null) {
+		if((mSingleObjectId == null && mParentId == null) && mTelepatContext!=null) {
 			identifier += ":context:"+mTelepatContext.getId();
 		}
 
@@ -430,8 +474,8 @@ public class Channel implements PropertyChangeListener {
 
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
 					TelepatBaseModel updatedObject = dbInstance.getObject(getSubscriptionIdentifier(),
-																		  objectId,
-																		  objectType);
+							objectId,
+							objectType);
 					String propertyValue = null;
 
 					if(notification.getNotificationValue().isJsonPrimitive()) {
@@ -448,8 +492,8 @@ public class Channel implements PropertyChangeListener {
 					TelepatLogger.log("Pushing changed value to listeners: "+propertyValue);
 					if(mChannelEventListener != null) {
 						mChannelEventListener.onObjectModified(updatedObject,
-															   propertyName,
-															   propertyValue);
+								propertyName,
+								propertyValue);
 					}
 					dbInstance.persistObject(getSubscriptionIdentifier(), updatedObject);
 				}
@@ -466,8 +510,8 @@ public class Channel implements PropertyChangeListener {
 				TelepatBaseModel deletedObject = null;
 				if(dbInstance.objectExists(this.getSubscriptionIdentifier(), objectId)) {
 					deletedObject = dbInstance.getObject(getSubscriptionIdentifier(),
-														 objectId,
-														 objectType);
+							objectId,
+							objectType);
 					dbInstance.deleteObject(getSubscriptionIdentifier(), deletedObject);
 				}
 				if(mChannelEventListener != null) {

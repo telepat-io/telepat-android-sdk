@@ -478,34 +478,20 @@ public final class Telepat
 					  String parentModelName,
 					  String parentId,
 					  HashMap<String, Object> filters,
+					  Channel.AggregationType aggregationType,
+					  String aggregationField,
 					  final TelepatCountCallback callback) {
 
-		HashMap<String, Object> requestBody = new HashMap<>();
-		HashMap<String, Object> channel = new HashMap<>();
-		channel.put("context", context.getId());
-		channel.put("model", modelName);
-		if(objectId != null) channel.put("id", objectId);
-		if(parentId!=null && parentModelName!=null) {
-			HashMap<String, String> parent = new HashMap<>();
-			parent.put("id", parentId);
-			parent.put("model", parentModelName);
-			requestBody.put("parent", parent);
-		}
-		if(userId!=null) channel.put("user", userId);
-		requestBody.put("channel", channel);
-		if(filters != null) requestBody.put("filters", filters);
+		Channel channel = new Channel.Builder()
+				.setContext(context)
+				.setModelName(modelName)
+				.setUserFilter(userId)
+				.setSingleObjectIdFilter(objectId)
+				.setParentFilter(parentModelName, parentId)
+				.setFilters(filters)
+				.build();
 
-		apiClient.count(requestBody, new Callback<GenericApiResponse>() {
-			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
-				callback.onSuccess(((Double)genericApiResponse.content.get("count")).intValue());
-			}
-
-			@Override
-			public void failure(RetrofitError error) {
-				callback.onFailure(error);
-			}
-		});
+		channel.count(callback, aggregationType, aggregationField);
 
 	}
 
