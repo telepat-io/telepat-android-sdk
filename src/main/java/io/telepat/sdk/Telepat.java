@@ -284,13 +284,16 @@ public final class Telepat
 	 * @param name The displayable name of the user
 	 * @param listener A callback for success and error events
 	 */
-	public void createUser(final String email, final String password, final String name, final UserCreateListener listener) {
+	public void createUser(final String email, final String password, final String name, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
 		if(email!=null && password!=null && name!=null) {
 			HashMap<String, String> userHash = new HashMap<>();
 			userHash.put("username", email);
 			userHash.put("email", email);
 			userHash.put("password", password);
 			userHash.put("name", name);
+			if(additionalMetadata != null) {
+				userHash.putAll(additionalMetadata);
+			}
 			apiClient.createUserWithEmailAndPassword(userHash, new Callback<Map<String, String>>() {
 				@Override
 				public void success(Map<String, String> stringStringMap, Response response) {
@@ -303,6 +306,10 @@ public final class Telepat
 				}
 			});
 		}
+	}
+
+	public void createUser(final String email, final String password, final String name, final UserCreateListener listener) {
+		createUser(email, password, name, null, listener);
 	}
 
 	public void loginWithUsername(final String email, final String password, final TelepatRequestListener listener) {
