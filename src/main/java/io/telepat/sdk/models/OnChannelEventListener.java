@@ -37,9 +37,14 @@ public interface OnChannelEventListener
 	void onObjectModified(TelepatBaseModel target, String propertyName, String newValue);
 
 	/**
-	 * Fired when an error was detected by the SDK
+	 * Fired when an error was detected by the SDK while subscribing
 	 * @param statusCode the code of the error
 	 * @param message a message associated with the error
 	 */
 	void onError(Integer statusCode, String message);
+
+	/**
+	 * Fired when the subscribe call is completed successfully.
+	 */
+	void onSubscribeComplete();
 }

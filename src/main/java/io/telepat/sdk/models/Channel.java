@@ -146,6 +146,10 @@ public class Channel implements PropertyChangeListener {
 								processNotification(new TransportNotification(entry));
 							}
 
+							if(Channel.this.mChannelEventListener != null) {
+								mChannelEventListener.onSubscribeComplete();
+							}
+
 						} else {
 							if (Channel.this.mChannelEventListener != null)
 								Channel.this.mChannelEventListener.onError(status, message.toString());
