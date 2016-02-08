@@ -7,4 +7,5 @@ public interface ContextUpdateListener {
     void contextAdded(TelepatContext ctx);
     void contextUpdated(TelepatContext ctx);
     void contextEnded(TelepatContext ctx);
+    void contextInitializeSuccess();
 }

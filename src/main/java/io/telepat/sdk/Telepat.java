@@ -209,6 +209,9 @@ public final class Telepat
 				if (mServerContexts == null) mServerContexts = new HashMap<>();
 				for (TelepatContext ctx : contextMap.content)
 					mServerContexts.put(ctx.getId(), ctx);
+				for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
+					listener.contextInitializeSuccess();
+				}
 				TelepatLogger.log("Retrieved " + contextMap.content.size() + " contexts");
 			}
 
@@ -626,7 +629,7 @@ public final class Telepat
 						case "meta":
 							Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
 							HashMap<String, Object> meta = gson.fromJson(notification.getNotificationValue().toString(), type);
-							ctx.setMeta(meta);
+							ctx.getMeta().putAll(meta);
 							break;
 						case "name":
 							ctx.setName(notification.getNotificationValue().getAsString());
