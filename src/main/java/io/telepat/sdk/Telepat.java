@@ -126,6 +126,13 @@ public final class Telepat
 		TelepatConstants.GCM_SENDER_ID = senderId;
 		initHTTPClient(telepatEndpoint, clientApiKey, clientAppId);
 		new GcmRegistrar(mContext).initGcmRegistration();
+
+		String JWTtoken = (String) internalDB.getOperationsData(TelepatConstants.JWT_KEY, null, String.class);
+		if(JWTtoken != null) {
+			requestInterceptor.setAuthorizationToken(JWTtoken);
+			refreshToken(null);
+		}
+
 		updateContexts();
 		TelepatLogger.log("Initialized Telepat Android SDK version "+ BuildConfig.VERSION_NAME);
 	}
@@ -315,6 +322,31 @@ public final class Telepat
 		createUser(email, password, name, null, listener);
 	}
 
+	/**
+	 * Refreshes the JWT authorization token. Tokens expire 60 minutes after they are issued,
+	 * call this in order to get a fresh one without doing login again.
+	 * @param requestListener a listener for the result state of the operation
+	 */
+	public void refreshToken(final TelepatRequestListener requestListener) {
+		apiClient.refreshToken(new Callback<GenericApiResponse>() {
+			@Override
+			public void success(GenericApiResponse genericApiResponse, Response response) {
+				String newToken = (String) genericApiResponse.content.get("token");
+				internalDB.setOperationsData(TelepatConstants.JWT_KEY, newToken);
+				internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+				requestInterceptor.setAuthorizationToken(newToken);
+				if(requestListener!=null)
+					requestListener.onSuccess();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				if(requestListener!=null)
+					requestListener.onError(error);
+			}
+		});
+	}
+
 	public void loginWithUsername(final String email, final String password, final TelepatRequestListener listener) {
 		if(email != null && password != null) {
 			HashMap<String, String> userHash = new HashMap<>();
@@ -324,6 +356,8 @@ public final class Telepat
 				@Override
 				public void success(GenericApiResponse genericApiResponse, Response response) {
 					TelepatLogger.log("Login successful");
+					internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
+					internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
 					internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
 					requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
 					listener.onSuccess();

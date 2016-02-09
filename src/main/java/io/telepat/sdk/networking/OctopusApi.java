@@ -58,6 +58,13 @@ public interface OctopusApi {
     Map<String, String> register(@Body Map<String, String> body);
 
     /**
+     * Refresh the current JWT token
+     * @param cb
+     */
+    @GET("/user/refresh_token")
+    void refreshToken(Callback<GenericApiResponse> cb);
+
+    /**
      * Method for sending an async login request
      * @param body
      * @param cb
