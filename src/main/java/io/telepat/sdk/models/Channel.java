@@ -483,8 +483,18 @@ public class Channel implements PropertyChangeListener {
 					String propertyValue = null;
 
 					if(notification.getNotificationValue().isJsonPrimitive()) {
-						propertyValue = notification.getNotificationValue().getAsString();
-						updatedObject.setProperty(propertyName, propertyValue);
+						Class propertyType = updatedObject.getPropertyType(propertyName);
+						if(propertyType == Long.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsLong());
+						else if(propertyType == String.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsString());
+						else if(propertyType == Double.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsDouble());
+						else if(propertyType == Float.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsFloat());
+						else {
+							TelepatLogger.log("Unsupported property type");
+						}
 					} else if(notification.getNotificationValue().isJsonObject()) {
 						TelepatLogger.log(propertyName + " is a json object. Please update your object accordingly in the listener call. ");
 						propertyValue = notification.getNotificationValue().getAsJsonObject().toString();
@@ -503,7 +513,7 @@ public class Channel implements PropertyChangeListener {
 				}
 				break;
 			case ObjectDeleted:
-				if(notification.getNotificationValue()==null || notification.getNotificationPath()==null) return;
+				if(notification.getNotificationPath()==null) return;
 				TelepatLogger.log("Object deleted "+
 						" with path: " + notification.getNotificationPath().toString());
 				pathSegments = notification.getNotificationPath().getAsString().split("/");

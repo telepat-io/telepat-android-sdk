@@ -37,7 +37,7 @@ public class RegisterDeviceRequest
 		tokenData.put("active", 1);
 
 		deviceInfo.put("os", "Android");
-		deviceInfo.put("udid", String.valueOf(System.currentTimeMillis()));
+		deviceInfo.put("udid", Telepat.getInstance().getDeviceLocalIdentifier());
 		deviceInfo.put("version", Build.VERSION.RELEASE);
 		deviceInfo.put("sdk_level", String.valueOf(Build.VERSION.SDK_INT));
 		deviceInfo.put("manufacturer", Build.MANUFACTURER);

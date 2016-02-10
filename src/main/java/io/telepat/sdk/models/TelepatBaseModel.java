@@ -99,6 +99,15 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
         return null;
     }
 
+    public Class getPropertyType(String propertyName) {
+        Field property;
+        try {
+            property = this.getClass().getDeclaredField(propertyName);
+            return property.getType();
+        } catch (NoSuchFieldException ignore) { }
+        return null;
+    }
+
     /**
      * Listener for object field value changes
      * @param event
