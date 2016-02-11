@@ -127,6 +127,7 @@ public class Channel implements PropertyChangeListener {
 	 * If the device is already registered, the stored objects will be notified again.
 	 */
 	public void subscribe() {
+		if(mTelepatContext==null) return;
 		apiInstance.subscribe(
 				getSubscribingRequestBody(),
 				new Callback<HashMap<String, JsonElement>>() {
