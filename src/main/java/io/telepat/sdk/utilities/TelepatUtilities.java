@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-import org.apache.http.protocol.HTTP;
-
 import java.security.MessageDigest;
 import java.util.Random;
 
@@ -27,7 +25,7 @@ public class TelepatUtilities
 		try
 		{
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hash = digest.digest(toHash.getBytes(HTTP.UTF_8));
+			byte[] hash = digest.digest(toHash.getBytes());
 			StringBuilder hexString = new StringBuilder();
 
 			for (byte aHash : hash) {

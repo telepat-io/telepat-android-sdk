@@ -20,11 +20,13 @@ import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.TelepatRequestListener;
 import io.telepat.sdk.models.TransportNotification;
 import io.telepat.sdk.models.UserCreateListener;
+import io.telepat.sdk.models.UserLoginCallback;
 import io.telepat.sdk.models.UserUpdatePatch;
 import io.telepat.sdk.networking.OctopusApi;
 import io.telepat.sdk.networking.OctopusRequestInterceptor;
 import io.telepat.sdk.networking.requests.RegisterDeviceRequest;
-import io.telepat.sdk.networking.requests.RegisterUserRequest;
+import io.telepat.sdk.networking.requests.RegisterFacebookUserRequest;
+import io.telepat.sdk.networking.requests.RegisterTwitterUserRequest;
 import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.GenericApiResponse;
 import io.telepat.sdk.networking.responses.TelepatCountCallback;
@@ -134,7 +136,7 @@ public final class Telepat
 		}
 
 		updateContexts();
-		TelepatLogger.log("Initialized Telepat Android SDK version "+ BuildConfig.VERSION_NAME);
+		TelepatLogger.log("Initialized Telepat Android SDK version " + BuildConfig.VERSION_NAME);
 	}
 
     /**
@@ -229,57 +231,40 @@ public final class Telepat
 		});
 	}
 
-    /**
-     * Send a Telepat Sync API call for logging in a user
-     * @param fbToken A Facebook OAUTH token
-     */
-	public void register(final String fbToken, final TelepatRequestListener loginListener)
+	/**
+	 * Send a Telepat Sync API call for registering a user with the Facebook auth provider
+	 * @param fbToken A Facebook OAUTH token
+	 */
+	@Deprecated
+	public void register(final String fbToken, final TelepatRequestListener loginListener) {
+		registerFacebookUser(fbToken, loginListener);
+	}
+
+	/**
+	 * Send a Telepat Sync API call for registering a user with the Facebook auth provider
+	 * @param fbToken A Facebook OAUTH token
+	 */
+	public void registerFacebookUser(final String fbToken, final TelepatRequestListener loginListener)
 	{
 		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
-		apiClient.registerAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<Map<String, String>>() {
+		apiClient.registerUserFacebook(new RegisterFacebookUserRequest(fbToken).getParams(), new Callback<Map<String, String>>() {
 			@Override
 			public void success(Map<String, String> userRegisterResponse, retrofit.client.Response response) {
 				TelepatLogger.log("User registered");
-				apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<GenericApiResponse>() {
-					@Override
-					public void success(GenericApiResponse genericApiResponse, Response response) {
-						internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
-						internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
-						internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
-						requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
-						TelepatLogger.log("User logged in");
-						loginListener.onSuccess();
-					}
-
-					@Override
-					public void failure(RetrofitError error) {
-						TelepatLogger.log("User login failed.");
-						loginListener.onError(error);
-					}
-				});
+				apiClient.loginFacebook(
+						new RegisterFacebookUserRequest(fbToken).getParams(),
+						new UserLoginCallback(requestInterceptor, internalDB, loginListener)
+				);
 
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
 				if (error.getResponse().getStatus() == 409) {
-					apiClient.loginAsync(new RegisterUserRequest(fbToken).getParams(), new Callback<GenericApiResponse>() {
-						@Override
-						public void success(GenericApiResponse genericApiResponse, Response response) {
-							internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
-							internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
-							internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
-							requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
-							TelepatLogger.log("User logged in -- existing user");
-							loginListener.onSuccess();
-						}
-
-						@Override
-						public void failure(RetrofitError error) {
-							TelepatLogger.log("User login failed - " + error.getMessage());
-							loginListener.onError(error);
-						}
-					});
+					apiClient.loginFacebook(
+							new RegisterFacebookUserRequest(fbToken).getParams(),
+							new UserLoginCallback(requestInterceptor, internalDB, loginListener)
+					);
 				} else {
 					TelepatLogger.error("user register failed");
 				}
@@ -288,7 +273,39 @@ public final class Telepat
 	}
 
 	/**
-	 * Submit a set of user credentials for creation
+	 * Send a Telepat Sync API call for registering a user with the Twitter auth provider
+	 */
+	@SuppressWarnings("unused")
+	public void registerTwitterUser(final String oauthToken, final String oauthTokenSecret, final TelepatRequestListener loginListener)
+	{
+		internalDB.setOperationsData(TelepatConstants.TWITTER_TOKEN_KEY, oauthToken);
+		internalDB.setOperationsData(TelepatConstants.TWITTER_SECRET_TOKEN_KEY, oauthTokenSecret);
+		apiClient.registerUserTwitter(new RegisterTwitterUserRequest(oauthToken, oauthTokenSecret).getParams(), new Callback<Map<String, String>>() {
+			@Override
+			public void success(Map<String, String> userRegisterResponse, retrofit.client.Response response) {
+				TelepatLogger.log("User registered");
+				apiClient.loginTwitter(
+						new RegisterTwitterUserRequest(oauthToken, oauthTokenSecret).getParams(),
+						new UserLoginCallback(requestInterceptor, internalDB, loginListener)
+				);
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				if (error.getResponse().getStatus() == 409) {
+					apiClient.loginTwitter(
+							new RegisterTwitterUserRequest(oauthToken, oauthTokenSecret).getParams(),
+							new UserLoginCallback(requestInterceptor, internalDB, loginListener)
+					);
+				} else {
+					TelepatLogger.error("User register failed");
+				}
+			}
+		});
+	}
+
+	/**
+	 * Submit a set of user credentials for registering a new user with the Email/Password auth provider
 	 * @param email The username of the Telepat user
 	 * @param password A cleartext password to be associated
 	 * @param name The displayable name of the user
@@ -304,7 +321,7 @@ public final class Telepat
 			if(additionalMetadata != null) {
 				userHash.putAll(additionalMetadata);
 			}
-			apiClient.createUserWithEmailAndPassword(userHash, new Callback<Map<String, String>>() {
+			apiClient.registerUserEmailPass(userHash, new Callback<Map<String, String>>() {
 				@Override
 				public void success(Map<String, String> stringStringMap, Response response) {
 					listener.onUserCreateSuccess();
@@ -328,48 +345,42 @@ public final class Telepat
 	 * @param requestListener a listener for the result state of the operation
 	 */
 	public void refreshToken(final TelepatRequestListener requestListener) {
-		apiClient.refreshToken(new Callback<GenericApiResponse>() {
-			@Override
-			public void success(GenericApiResponse genericApiResponse, Response response) {
-				String newToken = (String) genericApiResponse.content.get("token");
-				internalDB.setOperationsData(TelepatConstants.JWT_KEY, newToken);
-				internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
-				requestInterceptor.setAuthorizationToken(newToken);
-				if(requestListener!=null)
-					requestListener.onSuccess();
-			}
-
-			@Override
-			public void failure(RetrofitError error) {
-				if(requestListener!=null)
-					requestListener.onError(error);
-			}
-		});
+		apiClient.refreshToken(
+				new UserLoginCallback(
+						requestInterceptor,
+						internalDB,
+						requestListener
+				)
+		);
 	}
 
-	public void loginWithUsername(final String email, final String password, final TelepatRequestListener listener) {
+	public void loginWithUsername(final String email,
+								  final String password,
+								  final TelepatRequestListener listener) {
 		if(email != null && password != null) {
 			HashMap<String, String> userHash = new HashMap<>();
 			userHash.put("username", email);
 			userHash.put("password", password);
-			apiClient.loginWithEmailAndPassword(userHash, new Callback<GenericApiResponse>() {
-				@Override
-				public void success(GenericApiResponse genericApiResponse, Response response) {
-					TelepatLogger.log("Login successful");
-					internalDB.setOperationsData(TelepatConstants.JWT_KEY, genericApiResponse.content.get("token"));
-					internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
-					internalDB.setOperationsData(TelepatConstants.CURRENT_USER_DATA, genericApiResponse.content.get("user"));
-					requestInterceptor.setAuthorizationToken((String) genericApiResponse.content.get("token"));
-					listener.onSuccess();
-				}
-
-				@Override
-				public void failure(RetrofitError error) {
-					TelepatLogger.log("Login failed");
-					listener.onError(error);
-				}
-			});
+			apiClient.loginEmailAndPassword(
+					userHash,
+					new UserLoginCallback(requestInterceptor, internalDB, listener)
+			);
 		}
+	}
+
+	public void loginWithFacebook(final String fbToken, final TelepatRequestListener loginListener) {
+		apiClient.loginFacebook(
+				new RegisterFacebookUserRequest(fbToken).getParams(),
+				new UserLoginCallback(requestInterceptor, internalDB, loginListener)
+		);
+	}
+
+	public void loginWithTwitter(final String oauthToken,
+								 final String oauthTokenSecret,
+								 final TelepatRequestListener loginListener) {
+		apiClient.loginTwitter(
+				new RegisterTwitterUserRequest(oauthToken, oauthTokenSecret).getParams(),
+				new UserLoginCallback(requestInterceptor, internalDB, loginListener));
 	}
 
     /**
@@ -608,6 +619,7 @@ public final class Telepat
 		this.contextUpdateListeners.remove(listener);
 	}
 
+
 	public void updateUser(final ArrayList<UserUpdatePatch> userChanges, String userId, final TelepatRequestListener listener) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		ArrayList<HashMap<String, String>> jsonPatches = new ArrayList<>();
@@ -641,7 +653,13 @@ public final class Telepat
 		});
 	}
 
+	/**
+	 * Method for notifying listeners of updates to context objects. Used internally by transports
+	 * for firing notification updated.
+	 * @param notification a TransportNotification instance that encapsulates changes made to a context
+	 */
 	public void fireContextUpdate(TransportNotification notification) {
+		if(mServerContexts == null ) return;
 		Gson gson = new Gson();
 		TelepatContext ctx;
 		String contextId;
@@ -684,23 +702,6 @@ public final class Telepat
 					}
 				}
 				break;
-		}
-	}
-
-	@Deprecated
-	public void fireTextContextUpdate() {
-		if (this.mServerContexts.size() > 0) {
-			TelepatContext updatedContext = null;
-			//noinspection LoopStatementThatDoesntLoop
-			for(TelepatContext ctx : this.mServerContexts.values()) {
-				updatedContext = ctx;
-				break;
-			}
-			for (ContextUpdateListener listener : this.contextUpdateListeners) {
-				listener.contextAdded(updatedContext);
-				listener.contextUpdated(updatedContext);
-				listener.contextEnded(updatedContext);
-			}
 		}
 	}
 

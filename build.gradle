@@ -2,22 +2,17 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version '0.2.21'
-group = "io.telepat"
-project.ext.artifactId = "telepat-android-sdk"
-project.ext.projectName = "Telepat Android SDK"
-project.ext.projectDescription= "Android SDK for the Telepat realtime backend stack"
-project.ext.projectUrl = "http://telepat.io"
+version '0.2.22'
+
 android {
     compileSdkVersion 23
-    useLibrary  'org.apache.http.legacy'
-    buildToolsVersion "21.1.2"
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 29
-        versionName "0.2.21"
+        versionCode 30
+        versionName "0.2.22"
     }
 
     //noinspection GroovyAssignabilityCheck
@@ -35,10 +30,10 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.squareup.okhttp:okhttp:2.0.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.google.code.gson:gson:2.4'
     compile 'com.google.android.gms:play-services-gcm:8.1.0'
     compile 'com.github.fge:json-patch:1.9'
     compile 'com.snappydb:snappydb-lib:0.5.0'
@@ -46,4 +41,14 @@ dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.5.0'
 }
 
-apply from: "../upload_archives_task.gradle"
+if(file("..//upload_archives_task.gradle").exists()) {
+    group = "io.telepat"
+    project.ext.artifactId = "telepat-android-sdk"
+    project.ext.projectName = "Telepat Android SDK"
+    project.ext.projectDescription= "Android SDK for the Telepat realtime backend stack"
+    project.ext.projectUrl = "http://telepat.io"
+
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+    apply from: "..//upload_archives_task.gradle"
+}

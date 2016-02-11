@@ -34,28 +34,28 @@ public interface OctopusApi {
     void updateContexts(Callback<ContextsApiResponse> cb);
 
     /**
-     * Method for sending an async register request
+     * Method for sending a register request using the Facebook auth provider
      * @param body
      * @param cb
      */
     @POST("/user/register-facebook")
-    void registerAsync(@Body Map<String, String> body, Callback<Map<String, String>> cb);
+    void registerUserFacebook(@Body Map<String, String> body, Callback<Map<String, String>> cb);
 
     /**
-     * Method for sending an async register request
+     * Method for sending a register request using the Email/Password auth provider
      * @param body
      * @param cb
      */
     @POST("/user/register-username")
-    void createUserWithEmailAndPassword(@Body Map<String, String> body, Callback<Map<String, String>> cb);
+    void registerUserEmailPass(@Body Map<String, String> body, Callback<Map<String, String>> cb);
 
     /**
-     * Method for sending a synchronous register request
+     * Method for sending a register request using the Twitter auth provider
      * @param body
-     * @return
+     * @param cb
      */
-    @POST("/user/register-facebook")
-    Map<String, String> register(@Body Map<String, String> body);
+    @POST("/user/register-twitter")
+    void registerUserTwitter(@Body Map<String, String> body, Callback<Map<String, String>> cb);
 
     /**
      * Refresh the current JWT token
@@ -65,20 +65,28 @@ public interface OctopusApi {
     void refreshToken(Callback<GenericApiResponse> cb);
 
     /**
-     * Method for sending an async login request
+     * Method for sending a login request using the Facebook auth provider
      * @param body
      * @param cb
      */
     @POST("/user/login-facebook")
-    void loginAsync(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+    void loginFacebook(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
-     * Method for sending an async login request
+     * Method for sending a login request using the Email/Password auth provider
      * @param body
      * @param cb
      */
     @POST("/user/login_password")
-    void loginWithEmailAndPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+    void loginEmailAndPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    /**
+     * Method for sending a login request using the Twitter auth provider
+     * @param body
+     * @param cb
+     */
+    @POST("/user/login_password")
+    void loginTwitter(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending a logout request
