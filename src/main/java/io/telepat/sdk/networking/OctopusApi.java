@@ -73,20 +73,20 @@ public interface OctopusApi {
     void loginFacebook(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
+     * Method for sending a login request using the Twitter auth provider
+     * @param body
+     * @param cb
+     */
+    @POST("/user/login-twitter")
+    void loginTwitter(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    /**
      * Method for sending a login request using the Email/Password auth provider
      * @param body
      * @param cb
      */
     @POST("/user/login_password")
     void loginEmailAndPassword(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
-
-    /**
-     * Method for sending a login request using the Twitter auth provider
-     * @param body
-     * @param cb
-     */
-    @POST("/user/login_password")
-    void loginTwitter(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 
     /**
      * Method for sending a logout request

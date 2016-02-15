@@ -38,7 +38,7 @@ public class Channel implements PropertyChangeListener {
 	private HashMap<String, Object> mFilters;
 	private OnChannelEventListener mChannelEventListener;
 	private TelepatContext mTelepatContext;
-	private Class objectType;
+	private Class objectType = TelepatBaseModel.class;
 	private Gson gson = new Gson();
 	private HashMap<String, TelepatBaseModel> waitingForCreation = new HashMap<>();
 	private TelepatInternalDB dbInstance;
@@ -495,7 +495,9 @@ public class Channel implements PropertyChangeListener {
 							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsFloat());
 						else {
 							TelepatLogger.log("Unsupported property type");
+							return;
 						}
+						propertyValue = notification.getNotificationValue().getAsString();
 					} else if(notification.getNotificationValue().isJsonObject()) {
 						TelepatLogger.log(propertyName + " is a json object. Please update your object accordingly in the listener call. ");
 						propertyValue = notification.getNotificationValue().getAsJsonObject().toString();
