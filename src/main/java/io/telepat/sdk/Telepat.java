@@ -136,6 +136,9 @@ public final class Telepat
 		}
 
 		updateContexts();
+		String registrationId = (String) Telepat.getInstance()
+				.getDBInstance()
+				.getOperationsData(GcmRegistrar.PROPERTY_REG_ID, "", String.class);
 		TelepatLogger.log("Initialized Telepat Android SDK version " + BuildConfig.VERSION_NAME);
 	}
 

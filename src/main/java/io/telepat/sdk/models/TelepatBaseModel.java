@@ -16,7 +16,7 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     /**
      * Monitors the object for changes to be notified to the Telepat cloud
      */
-    protected final transient PropertyChangeSupport telepatChangeMonitor = new PropertyChangeSupport(
+    protected transient PropertyChangeSupport telepatChangeMonitor = new PropertyChangeSupport(
             this);
 
     /**
@@ -51,6 +51,9 @@ public class TelepatBaseModel implements PropertyChangeListener, Serializable {
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
+        if(telepatChangeMonitor == null) {
+            telepatChangeMonitor = new PropertyChangeSupport(this);
+        }
         telepatChangeMonitor.addPropertyChangeListener(listener);
     }
 

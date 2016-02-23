@@ -137,7 +137,9 @@ public class TelepatSnappyDb implements TelepatInternalDB {
         ArrayList<TelepatBaseModel> objects = new ArrayList<>();
         for(String key : keys) {
             try {
-                objects.add((TelepatBaseModel)snappyDb.get(key, type));
+                TelepatBaseModel obj = (TelepatBaseModel)snappyDb.get(key, type);
+                if(obj == null || obj.getId() == null) continue;
+                objects.add(obj);
             } catch (SnappydbException ignored) { }
         }
         Collections.sort(objects, new Comparator<TelepatBaseModel>() {

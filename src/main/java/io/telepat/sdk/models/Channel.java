@@ -166,6 +166,9 @@ public class Channel implements PropertyChangeListener {
 						} else {
 							TelepatLogger.log("Error subscribing: " + error.getMessage());
 						}
+						if(mChannelEventListener != null) {
+							mChannelEventListener.onError(error.getResponse().getStatus(), error.getMessage());
+						}
 					}
 				});
 	}
@@ -451,10 +454,11 @@ public class Channel implements PropertyChangeListener {
 					persistObject(dataObject);
 					return;
 				}
-				if(dbInstance.objectExists(getSubscriptionIdentifier(), dataObject.getId())) {
+				if(dataObject.getId() != null && dbInstance.objectExists(getSubscriptionIdentifier(), dataObject.getId())) {
 					return;
 				}
 				if(mChannelEventListener != null) {
+					dataObject.addPropertyChangeListener(this);
 					mChannelEventListener.onObjectAdded(dataObject);
 				}
 				persistObject(dataObject);
@@ -493,6 +497,8 @@ public class Channel implements PropertyChangeListener {
 							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsDouble());
 						else if(propertyType == Float.class)
 							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsFloat());
+						else if(propertyType == Boolean.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsBoolean());
 						else {
 							TelepatLogger.log("Unsupported property type");
 							return;
