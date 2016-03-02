@@ -180,7 +180,12 @@ public final class Telepat
 		String udid = (String) internalDB.getOperationsData(TelepatConstants.UDID_KEY,
 															"",
 															String.class);
-		if(!udid.isEmpty() && !shouldUpdateBackend) return;
+		if(!udid.isEmpty() && !shouldUpdateBackend) {
+			for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
+				listener.deviceRegisterSuccess();
+			}
+			return;
+		}
 
 		if(udid.isEmpty()) {
 			RegisterDeviceRequest request = new RegisterDeviceRequest(regId);
@@ -193,6 +198,9 @@ public final class Telepat
 						requestInterceptor.setUdid((String)octopusResponse.content.get("identifier"));
 						internalDB.setOperationsData(TelepatConstants.UDID_KEY,
 								octopusResponse.content.get("identifier"));
+						for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
+							listener.deviceRegisterSuccess();
+						}
 						TelepatLogger.log("Received Telepat UDID: " + octopusResponse.content.get("identifier"));
 					}
 				}

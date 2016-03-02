@@ -8,4 +8,5 @@ public interface ContextUpdateListener {
     void contextUpdated(TelepatContext ctx);
     void contextEnded(TelepatContext ctx);
     void contextInitializeSuccess();
+    void deviceRegisterSuccess();
 }
