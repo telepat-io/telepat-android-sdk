@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version '0.2.24'
+version '0.2.26'
 
 android {
     compileSdkVersion 23
@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 40
-        versionName "0.2.24"
+        versionCode 42
+        versionName "0.2.26"
     }
 
     //noinspection GroovyAssignabilityCheck

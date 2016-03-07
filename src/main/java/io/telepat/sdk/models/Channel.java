@@ -1,5 +1,6 @@
 package io.telepat.sdk.models;
 
+import android.os.Build;
 import android.util.Base64;
 
 import com.google.gson.Gson;
@@ -36,6 +37,7 @@ public class Channel implements PropertyChangeListener {
 	private String mParentId;
 	private String mSingleObjectId;
 	private HashMap<String, Object> mFilters;
+	private SubscriptionSorter sort;
 	private OnChannelEventListener mChannelEventListener;
 	private TelepatContext mTelepatContext;
 	private Class objectType = TelepatBaseModel.class;
@@ -67,6 +69,7 @@ public class Channel implements PropertyChangeListener {
 		private HashMap<String, Object> mFilters;
 		private TelepatContext mTelepatContext;
 		private OnChannelEventListener mChannelEventListener;
+		private SubscriptionSorter sort;
 		private Class objectType;
 
 		public Builder setModelName(String modelName) { this.mModelName = modelName; return this; }
@@ -81,6 +84,10 @@ public class Channel implements PropertyChangeListener {
 		}
 		public Builder setObjectType(Class objectType) {
 			this.objectType = objectType;
+			return this;
+		}
+		public Builder setSubscriptionSort(SubscriptionSorter sort) {
+			this.sort = sort;
 			return this;
 		}
 		public Channel build() {
@@ -108,6 +115,7 @@ public class Channel implements PropertyChangeListener {
 		this.mParentModelName = builder.mParentModelName;
 		this.mParentId = builder.mParentId;
 		this.mSingleObjectId = builder.mSingleObjectId;
+		this.sort = builder.sort;
 		this.dbInstance = Telepat.getInstance().getDBInstance();
 		linkExternalDependencies();
 //		this.notifyStoredObjects();
@@ -127,7 +135,6 @@ public class Channel implements PropertyChangeListener {
 	 * If the device is already registered, the stored objects will be notified again.
 	 */
 	public void subscribe() {
-		if(mTelepatContext==null) return;
 		apiInstance.subscribe(
 				getSubscribingRequestBody(),
 				new Callback<HashMap<String, JsonElement>>() {
@@ -147,7 +154,7 @@ public class Channel implements PropertyChangeListener {
 								processNotification(new TransportNotification(entry));
 							}
 
-							if(Channel.this.mChannelEventListener != null) {
+							if (Channel.this.mChannelEventListener != null) {
 								mChannelEventListener.onSubscribeComplete();
 							}
 
@@ -161,12 +168,15 @@ public class Channel implements PropertyChangeListener {
 					public void failure(RetrofitError error) {
 						if (error.getMessage().startsWith("409")) {
 							TelepatLogger.log("There is an already active subscription for this channel.");
+							if (Channel.this.mChannelEventListener != null) {
+								mChannelEventListener.onSubscribeComplete();
+							}
 						} else if (error.getMessage().startsWith("401")) {
 							TelepatLogger.log("Not logged in.");
 						} else {
 							TelepatLogger.log("Error subscribing: " + error.getMessage());
 						}
-						if(mChannelEventListener != null) {
+						if (mChannelEventListener != null) {
 							mChannelEventListener.onError(error.getResponse().getStatus(), error.getMessage());
 						}
 					}
@@ -218,7 +228,7 @@ public class Channel implements PropertyChangeListener {
 	public HashMap<String, Object> getSubscribingRequestBody() {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		HashMap<String, Object> channel = new HashMap<>();
-		if(mParentModelName == null)
+		if(mParentModelName == null && mTelepatContext!=null)
 			channel.put("context", mTelepatContext.getId());
 		channel.put("model", mModelName);
 		if(mSingleObjectId != null) channel.put("id", mSingleObjectId);
@@ -231,6 +241,13 @@ public class Channel implements PropertyChangeListener {
 		if(mUserId!=null) channel.put("user", mUserId);
 		requestBody.put("channel", channel);
 		if(mFilters != null) requestBody.put("filters", mFilters);
+		if(sort != null) {
+			HashMap<String, Object> sortingHashMap = new HashMap<>();
+			HashMap<String, String> sortingFieldOrder = new HashMap<>();
+			sortingFieldOrder.put("order", sort.getSortingDirection().toString());
+			sortingHashMap.put(sort.getSortingField(), sortingFieldOrder);
+			requestBody.put("sort", sortingHashMap);
+		}
 		return requestBody;
 	}
 

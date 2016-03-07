@@ -16,6 +16,7 @@ import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
+import io.telepat.sdk.models.SubscriptionSorter;
 import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.TelepatRequestListener;
 import io.telepat.sdk.models.TransportNotification;
@@ -514,6 +515,7 @@ public final class Telepat
 	 *                 to this object.
 	 * @return a <code>Channel</code> object with the specified characteristics
 	 */
+	@Deprecated
 	public Channel subscribe(TelepatContext context,
 							 String modelName,
 							 String objectId,
@@ -535,6 +537,15 @@ public final class Telepat
 				.build();
 		channel.subscribe();
 		return channel;
+	}
+
+	/**
+	 * Create a new subscription to a Telepat channel
+	 * @param channel A channel object that covers all the desired characteristics. See Channel.Builder for ways to create a channel object.
+	 * @return a <code>Channel</code> object with the specified characteristics
+	 */
+	public void subscribe(Channel channel) {
+		channel.subscribe();
 	}
 
 	public void count(TelepatContext context,
