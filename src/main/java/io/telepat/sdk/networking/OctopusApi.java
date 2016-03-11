@@ -30,8 +30,12 @@ public interface OctopusApi {
      * Method for retrieving all active contexts
      * @param cb
      */
-    @GET("/context/all")
+    @POST("/context/all")
     void updateContexts(Callback<ContextsApiResponse> cb);
+
+    @Deprecated
+    @GET("/context/all")
+    void updateContextsCompat(Callback<ContextsApiResponse> cb);
 
     /**
      * Method for sending a register request using the Facebook auth provider

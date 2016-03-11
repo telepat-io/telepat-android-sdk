@@ -16,7 +16,6 @@ import io.telepat.sdk.data.TelepatSnappyDb;
 import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
-import io.telepat.sdk.models.SubscriptionSorter;
 import io.telepat.sdk.models.TelepatContext;
 import io.telepat.sdk.models.TelepatRequestListener;
 import io.telepat.sdk.models.TransportNotification;
@@ -136,7 +135,7 @@ public final class Telepat
 			refreshToken(null);
 		}
 
-		updateContexts();
+		requestContexts();
 		String registrationId = (String) Telepat.getInstance()
 				.getDBInstance()
 				.getOperationsData(GcmRegistrar.PROPERTY_REG_ID, "", String.class);
@@ -220,27 +219,45 @@ public final class Telepat
     /**
      * Retrieve the currently active contexts for the current Telepat application
      */
-	private void updateContexts()
+	private void requestContexts()
 	{
 		apiClient.updateContexts(new Callback<ContextsApiResponse>() {
 			@Override
 			public void success(ContextsApiResponse contextMap,
 								retrofit.client.Response response) {
-				if (contextMap == null) return;
-				if (mServerContexts == null) mServerContexts = new HashMap<>();
-				for (TelepatContext ctx : contextMap.content)
-					mServerContexts.put(ctx.getId(), ctx);
-				for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
-					listener.contextInitializeSuccess();
-				}
-				TelepatLogger.log("Retrieved " + contextMap.content.size() + " contexts");
+				updateContexts(contextMap);
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-				TelepatLogger.log("Failed to get contexts" + error.getMessage());
+				if(error.getResponse().getStatus()==404) {
+					apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
+						@Override
+						public void success(ContextsApiResponse contextsApiResponse, Response response) {
+							updateContexts(contextsApiResponse);
+						}
+
+						@Override
+						public void failure(RetrofitError error) {
+							TelepatLogger.log("Failed to get contexts" + error.getMessage());
+						}
+					});
+				} else {
+					TelepatLogger.log("Failed to get contexts" + error.getMessage());
+				}
 			}
 		});
+	}
+
+	private void updateContexts(ContextsApiResponse contextMap) {
+		if (contextMap == null) return;
+		if (mServerContexts == null) mServerContexts = new HashMap<>();
+		for (TelepatContext ctx : contextMap.content)
+			mServerContexts.put(ctx.getId(), ctx);
+		for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
+			listener.contextInitializeSuccess();
+		}
+		TelepatLogger.log("Retrieved " + contextMap.content.size() + " contexts");
 	}
 
 	/**
@@ -321,18 +338,25 @@ public final class Telepat
 	 * @param email The username of the Telepat user
 	 * @param password A cleartext password to be associated
 	 * @param name The displayable name of the user
+	 * @param callbackUrl An optional deep link for redirecting the user back into the app after confirming his email address
 	 * @param listener A callback for success and error events
 	 */
-	public void createUser(final String email, final String password, final String name, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
+	public void createUser(final String email, final String password, final String name, final String callbackUrl, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
 		if(email!=null && password!=null && name!=null) {
 			HashMap<String, String> userHash = new HashMap<>();
 			userHash.put("username", email);
 			userHash.put("email", email);
 			userHash.put("password", password);
 			userHash.put("name", name);
+
 			if(additionalMetadata != null) {
 				userHash.putAll(additionalMetadata);
 			}
+
+			if(callbackUrl != null && !callbackUrl.isEmpty()) {
+				userHash.put("callbackUrl", callbackUrl);
+			}
+
 			apiClient.registerUserEmailPass(userHash, new Callback<Map<String, String>>() {
 				@Override
 				public void success(Map<String, String> stringStringMap, Response response) {
@@ -346,6 +370,10 @@ public final class Telepat
 			});
 		}
 	}
+
+	public void createUser(final String email, final String password, final String name, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
+		createUser(email, password, name, null, additionalMetadata, listener);
+}
 
 	public void createUser(final String email, final String password, final String name, final UserCreateListener listener) {
 		createUser(email, password, name, null, listener);
@@ -432,10 +460,15 @@ public final class Telepat
 	/**
 	 * Request a password reset email
 	 */
-	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
+	public void requestPasswordResetEmail(String username, String callbackUrl, final TelepatRequestListener listener) {
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("username", username);
 		requestBody.put("type", "android");
+
+		if(callbackUrl != null && !callbackUrl.isEmpty()) {
+			requestBody.put("callbackUrl", callbackUrl);
+		}
+
 		apiClient.requestPasswordReset(requestBody, new Callback<HashMap<String, String>>() {
 			@Override
 			public void success(HashMap<String, String> genericApiResponse, Response response) {
@@ -449,6 +482,10 @@ public final class Telepat
 				listener.onError(error);
 			}
 		});
+	}
+
+	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
+
 	}
 
 	/**
