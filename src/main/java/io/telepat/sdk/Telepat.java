@@ -5,6 +5,9 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +20,8 @@ import io.telepat.sdk.models.Channel;
 import io.telepat.sdk.models.ContextUpdateListener;
 import io.telepat.sdk.models.OnChannelEventListener;
 import io.telepat.sdk.models.TelepatContext;
+import io.telepat.sdk.models.TelepatProxyRequest;
+import io.telepat.sdk.models.TelepatProxyResponse;
 import io.telepat.sdk.models.TelepatRequestListener;
 import io.telepat.sdk.models.TransportNotification;
 import io.telepat.sdk.models.UserCreateListener;
@@ -230,7 +235,7 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				if(error.getResponse().getStatus()==404) {
+				if (error.getResponse().getStatus() == 404) {
 					apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
 						@Override
 						public void success(ContextsApiResponse contextsApiResponse, Response response) {
@@ -579,8 +584,8 @@ public final class Telepat
 	/**
 	 * Create a new subscription to a Telepat channel
 	 * @param channel A channel object that covers all the desired characteristics. See Channel.Builder for ways to create a channel object.
-	 * @return a <code>Channel</code> object with the specified characteristics
 	 */
+	@SuppressWarnings("unused")
 	public void subscribe(Channel channel) {
 		channel.subscribe();
 	}
@@ -762,6 +767,45 @@ public final class Telepat
 				}
 				break;
 		}
+	}
+
+	@SuppressWarnings("unused")
+	public void sendProxiedRequest(TelepatProxyRequest request, final TelepatProxyResponse callback) {
+		apiClient.proxy(request, new Callback<Response>() {
+			@Override
+			public void success(Response response, Response response2) {
+				//Try to get response body
+				BufferedReader reader = null;
+				StringBuilder sb = new StringBuilder();
+				try {
+
+					reader = new BufferedReader(new InputStreamReader(response.getBody().in()));
+					String line;
+
+					try {
+						while ((line = reader.readLine()) != null) {
+							sb.append(line);
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				String responseBody = sb.toString();
+				if(callback!=null) {
+					callback.onRequestFinished(responseBody, response.getHeaders());
+				}
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				if(callback!=null) {
+					callback.onTelepatError(error);
+				}
+			}
+		});
 	}
 
 	public String getAppId() {
