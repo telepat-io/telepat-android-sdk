@@ -254,11 +254,7 @@ public class Channel implements PropertyChangeListener {
 		requestBody.put("channel", channel);
 		if(mFilters != null) requestBody.put("filters", mFilters);
 		if(sort != null) {
-			HashMap<String, Object> sortingHashMap = new HashMap<>();
-			HashMap<String, String> sortingFieldOrder = new HashMap<>();
-			sortingFieldOrder.put("order", sort.getSortingDirection().toString());
-			sortingHashMap.put(sort.getSortingField(), sortingFieldOrder);
-			requestBody.put("sort", sortingHashMap);
+			requestBody.put("sort", sort.getSortingMap());
 		}
 		requestBody.put("offset", offset);
 		requestBody.put("limit", limit);
