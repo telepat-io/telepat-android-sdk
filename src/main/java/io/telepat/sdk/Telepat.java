@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.telepat.BuildConfig;
 import io.telepat.sdk.data.TelepatInternalDB;
@@ -82,7 +83,7 @@ public final class Telepat
 	/**
 	 * Context update listener array
 	 */
-	private ArrayList<ContextUpdateListener> contextUpdateListeners = new ArrayList<>();
+	private CopyOnWriteArrayList<ContextUpdateListener> contextUpdateListeners = new CopyOnWriteArrayList<>();
 	/**
 	 * Unique device identifier
 	 */
