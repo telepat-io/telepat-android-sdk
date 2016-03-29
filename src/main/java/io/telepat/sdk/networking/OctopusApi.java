@@ -5,9 +5,11 @@ import com.google.gson.JsonElement;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.telepat.sdk.models.TelepatProxyRequest;
 import io.telepat.sdk.networking.responses.ContextsApiResponse;
 import io.telepat.sdk.networking.responses.GenericApiResponse;
 import retrofit.Callback;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -30,8 +32,12 @@ public interface OctopusApi {
      * Method for retrieving all active contexts
      * @param cb
      */
-    @GET("/context/all")
+    @POST("/context/all")
     void updateContexts(Callback<ContextsApiResponse> cb);
+
+    @Deprecated
+    @GET("/context/all")
+    void updateContextsCompat(Callback<ContextsApiResponse> cb);
 
     /**
      * Method for sending a register request using the Facebook auth provider
@@ -156,4 +162,7 @@ public interface OctopusApi {
      */
     @POST("/object/delete")
     void delete(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
+
+    @POST("/proxy")
+    void proxy(@Body TelepatProxyRequest request, Callback<Response> cb);
 }

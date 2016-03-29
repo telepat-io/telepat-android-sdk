@@ -30,12 +30,14 @@ import retrofit.client.Response;
  */
 
 public class Channel implements PropertyChangeListener {
+	private static final int DEFAULT_MAXIMUM_OBJECT_LIMIT = 64;
 	private String mModelName;
 	private String mUserId;
 	private String mParentModelName;
 	private String mParentId;
 	private String mSingleObjectId;
 	private HashMap<String, Object> mFilters;
+	private SubscriptionSorter sort;
 	private OnChannelEventListener mChannelEventListener;
 	private TelepatContext mTelepatContext;
 	private Class objectType = TelepatBaseModel.class;
@@ -67,6 +69,7 @@ public class Channel implements PropertyChangeListener {
 		private HashMap<String, Object> mFilters;
 		private TelepatContext mTelepatContext;
 		private OnChannelEventListener mChannelEventListener;
+		private SubscriptionSorter sort;
 		private Class objectType;
 
 		public Builder setModelName(String modelName) { this.mModelName = modelName; return this; }
@@ -81,6 +84,10 @@ public class Channel implements PropertyChangeListener {
 		}
 		public Builder setObjectType(Class objectType) {
 			this.objectType = objectType;
+			return this;
+		}
+		public Builder setSubscriptionSort(SubscriptionSorter sort) {
+			this.sort = sort;
 			return this;
 		}
 		public Channel build() {
@@ -108,6 +115,7 @@ public class Channel implements PropertyChangeListener {
 		this.mParentModelName = builder.mParentModelName;
 		this.mParentId = builder.mParentId;
 		this.mSingleObjectId = builder.mSingleObjectId;
+		this.sort = builder.sort;
 		this.dbInstance = Telepat.getInstance().getDBInstance();
 		linkExternalDependencies();
 //		this.notifyStoredObjects();
@@ -126,10 +134,9 @@ public class Channel implements PropertyChangeListener {
 	 * Create a new subscription with the Telepat Cloud instance.
 	 * If the device is already registered, the stored objects will be notified again.
 	 */
-	public void subscribe() {
-		if(mTelepatContext==null) return;
+	private void doSubscribe(int offset, int limit, boolean justInitialState) {
 		apiInstance.subscribe(
-				getSubscribingRequestBody(),
+				getSubscribingRequestBody(offset, limit, justInitialState),
 				new Callback<HashMap<String, JsonElement>>() {
 					@Override
 					public void success(
@@ -147,7 +154,7 @@ public class Channel implements PropertyChangeListener {
 								processNotification(new TransportNotification(entry));
 							}
 
-							if(Channel.this.mChannelEventListener != null) {
+							if (Channel.this.mChannelEventListener != null) {
 								mChannelEventListener.onSubscribeComplete();
 							}
 
@@ -161,16 +168,31 @@ public class Channel implements PropertyChangeListener {
 					public void failure(RetrofitError error) {
 						if (error.getMessage().startsWith("409")) {
 							TelepatLogger.log("There is an already active subscription for this channel.");
+							if (Channel.this.mChannelEventListener != null) {
+								mChannelEventListener.onSubscribeComplete();
+							}
 						} else if (error.getMessage().startsWith("401")) {
 							TelepatLogger.log("Not logged in.");
 						} else {
 							TelepatLogger.log("Error subscribing: " + error.getMessage());
 						}
-						if(mChannelEventListener != null) {
+						if (mChannelEventListener != null) {
 							mChannelEventListener.onError(error.getResponse().getStatus(), error.getMessage());
 						}
 					}
 				});
+	}
+
+	public void subscribe() {
+		doSubscribe(0, DEFAULT_MAXIMUM_OBJECT_LIMIT, false);
+	}
+
+	public void subscribe(int offset, int limit) {
+		doSubscribe(offset, limit, false);
+	}
+
+	public void getCurrentState(int offset, int limit) {
+		doSubscribe(offset, limit, true);
 	}
 
 	public void count(final TelepatCountCallback callback, AggregationType aggregationType, String aggregationField) {
@@ -215,10 +237,10 @@ public class Channel implements PropertyChangeListener {
 	 * @return Get a HashMap containing the relevant POST field parameters for a
 	 * Subscribe Sync API request
 	 */
-	public HashMap<String, Object> getSubscribingRequestBody() {
+	public HashMap<String, Object> getSubscribingRequestBody(int offset, int limit, boolean justInitialState) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		HashMap<String, Object> channel = new HashMap<>();
-		if(mParentModelName == null)
+		if(mParentModelName == null && mTelepatContext!=null)
 			channel.put("context", mTelepatContext.getId());
 		channel.put("model", mModelName);
 		if(mSingleObjectId != null) channel.put("id", mSingleObjectId);
@@ -231,7 +253,27 @@ public class Channel implements PropertyChangeListener {
 		if(mUserId!=null) channel.put("user", mUserId);
 		requestBody.put("channel", channel);
 		if(mFilters != null) requestBody.put("filters", mFilters);
+		if(sort != null) {
+			HashMap<String, Object> sortingHashMap = new HashMap<>();
+			HashMap<String, String> sortingFieldOrder = new HashMap<>();
+			sortingFieldOrder.put("order", sort.getSortingDirection().toString());
+			sortingHashMap.put(sort.getSortingField(), sortingFieldOrder);
+			requestBody.put("sort", sortingHashMap);
+		}
+		requestBody.put("offset", offset);
+		requestBody.put("limit", limit);
+		if(justInitialState) {
+			requestBody.put("no_subscribe", true);
+		}
 		return requestBody;
+	}
+
+	public HashMap<String, Object> getSubscribingRequestBody(int offset, int limit) {
+		return getSubscribingRequestBody(offset, limit, false);
+	}
+
+	public HashMap<String, Object> getSubscribingRequestBody() {
+		return getSubscribingRequestBody(0, DEFAULT_MAXIMUM_OBJECT_LIMIT);
 	}
 
 	/**
@@ -331,37 +373,10 @@ public class Channel implements PropertyChangeListener {
 
 	/**
 	 * Get a string representation of this channels characteristics
-	 * @return
+	 * @return a string representation of this channels characteristics
 	 */
 	public String getSubscriptionIdentifier() {
-    /*
-    4:  "blg:{appId}:{model}",                                 //channel
-    used for built-in models (users, contexts)
-    5:  "blg:{appId}:context:{context}:{model}",
-    //the Channel of all objects from a context
-    7:  "blg:{appId}:context:{context}:users:{user_id}:{model}",
-    //the Channel of all objects from a context from an user
-    12: "blg:{appId}:{parent_model}:{parent_id}:{model}",            //the
-    Channel of all objects belong to a parent
-    14: "blg:{appId}:users:{user_id}:{parent_model}:{parent_id}:{model}",//the
-    Channel of all comments from event 1 from user 16
-    20: "blg:{appId}:{model}:{id}",                            //the
-    Channel of one item
-    var key = 'blg:'+API.appId;
-    if (!options.channel.id && options.channel.context) {
-      key += ':context:'+options.channel.context;
-    }
-    if (options.channel.user) {
-      key += ':users:'+options.channel.user;
-    }
-    key += ':'+options.channel.model;
-    if (options.channel.id) {
-      key += ':'+options.channel.id;
-    }
-    return key;
-    */
-
-		if(mModelName == null) return null;
+    	if(mModelName == null) return null;
 
 		String identifier = "blg:"+Telepat.getInstance().getAppId();
 		if((mSingleObjectId == null && mParentId == null) && mTelepatContext!=null) {
