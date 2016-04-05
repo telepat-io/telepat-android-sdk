@@ -235,20 +235,25 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				if (error.getResponse().getStatus() == 404) {
-					apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
-						@Override
-						public void success(ContextsApiResponse contextsApiResponse, Response response) {
-							updateContexts(contextsApiResponse);
-						}
+				//TODO: bubble errors to the User level
+				if (error != null) {
+					if (error.getResponse().getStatus() == 404) {
+						apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
+							@Override
+							public void success(ContextsApiResponse contextsApiResponse, Response response) {
+								updateContexts(contextsApiResponse);
+							}
 
-						@Override
-						public void failure(RetrofitError error) {
-							TelepatLogger.log("Failed to get contexts" + error.getMessage());
-						}
-					});
+							@Override
+							public void failure(RetrofitError error) {
+								TelepatLogger.log("Failed to get contexts" + error.getMessage());
+							}
+						});
+					} else {
+						TelepatLogger.log("Failed to get contexts" + error.getMessage());
+					}
 				} else {
-					TelepatLogger.log("Failed to get contexts" + error.getMessage());
+					TelepatLogger.log("Failed to get contexts");
 				}
 			}
 		});
