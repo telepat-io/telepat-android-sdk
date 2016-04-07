@@ -236,20 +236,25 @@ public final class Telepat
 
 			@Override
 			public void failure(RetrofitError error) {
-				if (error.getResponse().getStatus() == 404) {
-					apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
-						@Override
-						public void success(ContextsApiResponse contextsApiResponse, Response response) {
-							updateContexts(contextsApiResponse);
-						}
+				//TODO: bubble errors to the User level
+				if (error != null) {
+					if (error.getResponse().getStatus() == 404) {
+						apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
+							@Override
+							public void success(ContextsApiResponse contextsApiResponse, Response response) {
+								updateContexts(contextsApiResponse);
+							}
 
-						@Override
-						public void failure(RetrofitError error) {
-							TelepatLogger.log("Failed to get contexts" + error.getMessage());
-						}
-					});
+							@Override
+							public void failure(RetrofitError error) {
+								TelepatLogger.log("Failed to get contexts" + error.getMessage());
+							}
+						});
+					} else {
+						TelepatLogger.log("Failed to get contexts" + error.getMessage());
+					}
 				} else {
-					TelepatLogger.log("Failed to get contexts" + error.getMessage());
+					TelepatLogger.log("Failed to get contexts");
 				}
 			}
 		});
@@ -687,9 +692,9 @@ public final class Telepat
 
 	public void updateUser(final ArrayList<UserUpdatePatch> userChanges, String userId, final TelepatRequestListener listener) {
 		HashMap<String, Object> requestBody = new HashMap<>();
-		ArrayList<HashMap<String, String>> jsonPatches = new ArrayList<>();
+		ArrayList<HashMap<String, Object>> jsonPatches = new ArrayList<>();
 		for(UserUpdatePatch patch : userChanges) {
-			HashMap<String, String> jsonPatch = new HashMap<>();
+			HashMap<String, Object> jsonPatch = new HashMap<>();
 			jsonPatch.put("op", "replace");
 			jsonPatch.put("path", "user/"+userId+"/"+patch.getFieldName());
 			jsonPatch.put("value", patch.getFieldValue());

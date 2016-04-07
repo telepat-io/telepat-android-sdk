@@ -12,14 +12,14 @@ public class UserUpdatePatch {
         this.fieldName = fieldName;
     }
 
-    public String getFieldValue() {
+    public Object getFieldValue() {
         return fieldValue;
     }
 
-    public void setFieldValue(String fieldValue) {
+    public void setFieldValue(Object fieldValue) {
         this.fieldValue = fieldValue;
     }
 
     private String fieldName;
-    private String fieldValue;
+    private Object fieldValue;
 }
