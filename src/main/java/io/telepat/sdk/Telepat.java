@@ -691,9 +691,9 @@ public final class Telepat
 
 	public void updateUser(final ArrayList<UserUpdatePatch> userChanges, String userId, final TelepatRequestListener listener) {
 		HashMap<String, Object> requestBody = new HashMap<>();
-		ArrayList<HashMap<String, String>> jsonPatches = new ArrayList<>();
+		ArrayList<HashMap<String, Object>> jsonPatches = new ArrayList<>();
 		for(UserUpdatePatch patch : userChanges) {
-			HashMap<String, String> jsonPatch = new HashMap<>();
+			HashMap<String, Object> jsonPatch = new HashMap<>();
 			jsonPatch.put("op", "replace");
 			jsonPatch.put("path", "user/"+userId+"/"+patch.getFieldName());
 			jsonPatch.put("value", patch.getFieldValue());
