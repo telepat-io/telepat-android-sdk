@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -526,6 +527,40 @@ public final class Telepat
 		});
 	}
 
+	public void getUserMetadata(Callback<GenericApiResponse> callback) {
+		apiClient.getUserMetadata(callback);
+	}
+
+	public void updateUserMetadata(List<UserUpdatePatch> patches, String metadataId, final TelepatRequestListener listener) {
+		HashMap<String, Object> requestBody = new HashMap<>();
+		ArrayList<HashMap<String, Object>> jsonPatches = new ArrayList<>();
+		for(UserUpdatePatch patch : patches) {
+			HashMap<String, Object> jsonPatch = new HashMap<>();
+			jsonPatch.put("op", "replace");
+			jsonPatch.put("path", "user_metadata/"+metadataId+"/"+patch.getFieldName());
+			jsonPatch.put("value", patch.getFieldValue());
+			jsonPatches.add(jsonPatch);
+		}
+		requestBody.put("patches", jsonPatches);
+		apiClient.updateUserMetadata(requestBody, new Callback<GenericApiResponse>() {
+			@Override
+			public void success(GenericApiResponse response, Response response2) {
+				listener.onSuccess();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				listener.onError(error);
+			}
+		});
+	}
+
+	public void updateUserMetadata(UserUpdatePatch patch, String metadataId, final TelepatRequestListener listener) {
+		ArrayList<UserUpdatePatch> patches = new ArrayList<>();
+		patches.add(patch);
+		updateUserMetadata(patches, metadataId, listener);
+	}
+
     /**
      * Create a new subscription to a Telepat channel
      * @param context The context ID where the desired objects live in
@@ -812,6 +847,14 @@ public final class Telepat
 				}
 			}
 		});
+	}
+
+	public void me(Callback<GenericApiResponse> callback) {
+		getAPIInstance().me(callback);
+	}
+
+	public void get(String userId, Callback<GenericApiResponse> callback) {
+		getAPIInstance().get(userId, callback);
 	}
 
 	public String getAppId() {

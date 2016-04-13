@@ -13,6 +13,7 @@ import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
+import retrofit.http.Query;
 
 /**
  * Created by Andrei Marinescu on 02.06.2015.
@@ -120,6 +121,12 @@ public interface OctopusApi {
     @POST("/user/update")
     void updateUser(@Body Map<String, Object> body, Callback<HashMap<String, String>> cb);
 
+    @GET("/user/metadata")
+    void getUserMetadata(Callback<GenericApiResponse> cb);
+
+    @POST("/user/update_metadata")
+    void updateUserMetadata(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
+
     /**
      * Method for sending a subscribe request
      * @param body
@@ -165,4 +172,10 @@ public interface OctopusApi {
 
     @POST("/proxy")
     void proxy(@Body TelepatProxyRequest request, Callback<Response> cb);
+
+    @GET("/user/me")
+    void me(Callback<GenericApiResponse> cb);
+
+    @GET("/user/get")
+    void get(@Query("user_id") String userId, Callback<GenericApiResponse> cb);
 }
