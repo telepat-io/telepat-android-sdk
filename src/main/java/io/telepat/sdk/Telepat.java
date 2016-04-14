@@ -542,9 +542,9 @@ public final class Telepat
 			jsonPatches.add(jsonPatch);
 		}
 		requestBody.put("patches", jsonPatches);
-		apiClient.updateUserMetadata(requestBody, new Callback<GenericApiResponse>() {
+		apiClient.updateUserMetadata(requestBody, new Callback<HashMap<String, Object>>() {
 			@Override
-			public void success(GenericApiResponse response, Response response2) {
+			public void success(HashMap<String, Object> response, Response response2) {
 				listener.onSuccess();
 			}
 

@@ -125,7 +125,7 @@ public interface OctopusApi {
     void getUserMetadata(Callback<GenericApiResponse> cb);
 
     @POST("/user/update_metadata")
-    void updateUserMetadata(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
+    void updateUserMetadata(@Body Map<String, Object> body, Callback<HashMap<String, Object>> cb);
 
     /**
      * Method for sending a subscribe request
