@@ -238,7 +238,7 @@ public final class Telepat
 			@Override
 			public void failure(RetrofitError error) {
 				//TODO: bubble errors to the User level
-				if (error != null) {
+				if (error != null && error.getResponse() != null) {
 					if (error.getResponse().getStatus() == 404) {
 						apiClient.updateContextsCompat(new Callback<ContextsApiResponse>() {
 							@Override
