@@ -735,7 +735,6 @@ public final class Telepat
 			jsonPatch.put("value", patch.getFieldValue());
 			jsonPatches.add(jsonPatch);
 		}
-		Telepat.getInstance().getDBInstance().empty();
 		requestBody.put("patches", jsonPatches);
 		apiClient.updateUser(requestBody, new Callback<HashMap<String, String>>() {
 			@Override

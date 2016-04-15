@@ -500,7 +500,9 @@ public class Channel implements PropertyChangeListener {
 
 					if(notification.getNotificationValue().isJsonPrimitive()) {
 						Class propertyType = updatedObject.getPropertyType(propertyName);
-						if(propertyType == Long.class)
+						if(propertyType == Integer.class)
+							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsInt());
+						else if(propertyType == Long.class)
 							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsLong());
 						else if(propertyType == String.class)
 							updatedObject.setProperty(propertyName, notification.getNotificationValue().getAsString());
