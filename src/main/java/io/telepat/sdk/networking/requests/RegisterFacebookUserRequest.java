@@ -10,12 +10,18 @@ import java.util.Map;
 public class RegisterFacebookUserRequest
 {
 	public static final String KEY_USER_FB_TOKEN = "access_token";
+	public static final String KEY_USER_USERNAME = "username";
 	/**
 	 * The logged in user's Facebook OAUTH token
 	 */
 	private String mFBToken;
+	private String mUsername;
 
 	public RegisterFacebookUserRequest(String fbToken) { mFBToken = fbToken; }
+	public RegisterFacebookUserRequest(String fbToken, String username) {
+		mFBToken = fbToken;
+		mUsername = username;
+	}
 
 	/**
 	 *
@@ -25,6 +31,9 @@ public class RegisterFacebookUserRequest
 		HashMap<String, String> params = new HashMap<>(1);
 
 		params.put(KEY_USER_FB_TOKEN, mFBToken);
+		if (mUsername != null && !mUsername.isEmpty()) {
+			params.put(KEY_USER_USERNAME, mUsername);
+		}
 
 		return params;
 	}

@@ -39,7 +39,11 @@ public class UserLoginCallback implements Callback<GenericApiResponse>  {
 
     @Override
     public void failure(RetrofitError error) {
-        TelepatLogger.log("User login failed.");
+        if(error!=null && error.getResponse()!=null && error.getResponse().getStatus()==409) {
+            TelepatLogger.log("A facebook user with that fid already exists.");
+        } else {
+            TelepatLogger.log("User login failed.");
+        }
         if(loginListener != null)
             loginListener.onError(error);
     }

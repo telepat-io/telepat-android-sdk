@@ -291,7 +291,6 @@ public final class Telepat
 		apiClient.registerUserFacebook(new RegisterFacebookUserRequest(fbToken).getParams(), new Callback<Map<String, String>>() {
 			@Override
 			public void success(Map<String, String> userRegisterResponse, retrofit.client.Response response) {
-				TelepatLogger.log("User registered");
 				apiClient.loginFacebook(
 						new RegisterFacebookUserRequest(fbToken).getParams(),
 						new UserLoginCallback(requestInterceptor, internalDB, loginListener)
@@ -308,6 +307,7 @@ public final class Telepat
 					);
 				} else {
 					TelepatLogger.error("user register failed");
+					loginListener.onError(error);
 				}
 			}
 		});
@@ -420,11 +420,15 @@ public final class Telepat
 		}
 	}
 
-	public void loginWithFacebook(final String fbToken, final TelepatRequestListener loginListener) {
+	public void loginWithFacebook(final String fbToken, final String existingUsername, final TelepatRequestListener loginListener) {
 		apiClient.loginFacebook(
-				new RegisterFacebookUserRequest(fbToken).getParams(),
+				new RegisterFacebookUserRequest(fbToken, existingUsername).getParams(),
 				new UserLoginCallback(requestInterceptor, internalDB, loginListener)
 		);
+	}
+
+	public void loginWithFacebook(final String fbToken, final TelepatRequestListener loginListener) {
+		loginWithFacebook(fbToken, null, loginListener);
 	}
 
 	public void loginWithTwitter(final String oauthToken,
