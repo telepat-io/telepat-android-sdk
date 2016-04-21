@@ -52,7 +52,7 @@ public class UserLoginCallback implements Callback<GenericApiResponse>  {
     private void persistLoginData(HashMap<String, Object> loginData) {
         if(loginData.containsKey("token")) {
             internalDB.setOperationsData(TelepatConstants.JWT_KEY, loginData.get("token"));
-            internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
+//            internalDB.setOperationsData(TelepatConstants.JWT_TIMESTAMP_KEY, System.currentTimeMillis());
             interceptor.setAuthorizationToken((String) loginData.get("token"));
         }
 
