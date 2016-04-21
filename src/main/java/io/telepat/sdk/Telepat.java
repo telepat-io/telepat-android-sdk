@@ -501,7 +501,7 @@ public final class Telepat
 	}
 
 	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
-
+		requestPasswordResetEmail(username, null, listener);
 	}
 
 	/**
