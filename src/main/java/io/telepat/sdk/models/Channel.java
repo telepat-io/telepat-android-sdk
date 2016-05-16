@@ -423,7 +423,12 @@ public class Channel implements PropertyChangeListener {
 	}
 
 	public List<TelepatBaseModel> getChannelObjects() {
-		return dbInstance.getChannelObjects(getSubscriptionIdentifier(), this.objectType);
+		ArrayList<TelepatBaseModel> channelObjects = new ArrayList<>();
+		for(TelepatBaseModel dataObject : dbInstance.getChannelObjects(getSubscriptionIdentifier(), this.objectType)) {
+			dataObject.addPropertyChangeListener(this);
+			channelObjects.add(dataObject);
+		}
+		return channelObjects;
 	}
 
 	public TelepatBaseModel getObject(String id) {
