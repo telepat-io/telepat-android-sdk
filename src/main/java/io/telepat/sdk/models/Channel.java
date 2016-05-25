@@ -532,6 +532,7 @@ public class Channel implements PropertyChangeListener {
 
 					TelepatLogger.log("Pushing changed value to listeners: "+propertyValue);
 					if(mChannelEventListener != null) {
+						updatedObject.addPropertyChangeListener(this);
 						mChannelEventListener.onObjectModified(updatedObject,
 								propertyName,
 								propertyValue);
