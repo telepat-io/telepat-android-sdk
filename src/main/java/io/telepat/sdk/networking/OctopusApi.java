@@ -178,4 +178,7 @@ public interface OctopusApi {
 
     @GET("/user/get")
     void get(@Query("user_id") String userId, Callback<GenericApiResponse> cb);
+
+    @POST("/email")
+    void sendEmail(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
 }

@@ -853,6 +853,25 @@ public final class Telepat
 		});
 	}
 
+	public void sendEmail(List<String> recipients, String from, String fromName, String subject, String body, Callback<GenericApiResponse> callback) {
+		HashMap<String, Object> requestBody = new HashMap<>();
+		if(recipients==null || from==null || body==null) {
+			callback.failure(null);
+			return;
+		}
+		ArrayList<String> recipientsList = new ArrayList<>(recipients);
+		requestBody.put("recipients", recipientsList);
+		requestBody.put("from", from);
+		if(fromName!=null) {
+			requestBody.put("from_name", fromName);
+		}
+		if(subject!=null) {
+			requestBody.put("subject", subject);
+		}
+		requestBody.put("body", body);
+		apiClient.sendEmail(requestBody, callback);
+	}
+
 	public void me(Callback<GenericApiResponse> callback) {
 		getAPIInstance().me(callback);
 	}
