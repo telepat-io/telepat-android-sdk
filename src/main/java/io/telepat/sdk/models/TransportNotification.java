@@ -24,11 +24,21 @@ public class TransportNotification {
      */
     JsonElement notificationPath;
 
-    public TransportNotification(JsonObject notificationObject, Channel.NotificationType notificationType) {
+    public  TransportNotification(JsonObject notificationObject, Channel.NotificationType notificationType) {
         if(notificationObject.get("value") != null)
             notificationValue = notificationObject.get("value");
+        else if(notificationObject.get("object")!=null) {
+            notificationValue = notificationObject.get("object");
+        } else if(notificationObject.has("patch") && notificationObject.get("patch").isJsonObject()) {
+            JsonObject updatePatch = notificationObject.getAsJsonObject("patch");
+            notificationValue = updatePatch.get("value");
+        }
         if(notificationObject.get("path") != null)
             notificationPath = notificationObject.get("path");
+        else if(notificationObject.has("patch") && notificationObject.get("patch").isJsonObject()) {
+            JsonObject updatePatch = notificationObject.getAsJsonObject("patch");
+            notificationPath = updatePatch.get("path");
+        }
         this.notificationType = notificationType;
     }
 

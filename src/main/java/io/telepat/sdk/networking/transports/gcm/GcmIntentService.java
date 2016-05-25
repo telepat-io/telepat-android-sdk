@@ -40,9 +40,9 @@ public class GcmIntentService extends IntentService
 			JsonArray newObjects = (JsonArray) jsonObject.get("new");
 			JsonArray updatedObjects = (JsonArray) jsonObject.get("updated");
 			JsonArray deletedObjects = (JsonArray) jsonObject.get("deleted");
-			if(newObjects != null) notifyChannel(newObjects, Channel.NotificationType.ObjectAdded);
-			if(updatedObjects != null) notifyChannel(updatedObjects, Channel.NotificationType.ObjectUpdated);
-			if(deletedObjects != null) notifyChannel(deletedObjects, Channel.NotificationType.ObjectDeleted);
+			if(newObjects != null) prepareChannelNotification(newObjects, Channel.NotificationType.ObjectAdded);
+			if(updatedObjects != null) prepareChannelNotification(updatedObjects, Channel.NotificationType.ObjectUpdated);
+			if(deletedObjects != null) prepareChannelNotification(deletedObjects, Channel.NotificationType.ObjectDeleted);
 		}
 	}
 
@@ -51,23 +51,42 @@ public class GcmIntentService extends IntentService
      * @param objects A JsonArray of notifications
      * @param notificationType The type of notifications (added/updated/deleted)
      */
-	private void notifyChannel(JsonArray objects, Channel.NotificationType notificationType) {
-		for(JsonElement notificationObject : objects) {
-			if(notificationObject.isJsonObject()) {
-				TransportNotification notification = new TransportNotification((JsonObject)notificationObject, notificationType);
-				String channelIdentifier = ((JsonObject)notificationObject).get("subscription").getAsString();
-				if(channelIdentifier.endsWith(":context")) {
-					Telepat.getInstance().fireContextUpdate(notification);
+	private void prepareChannelNotification(JsonArray objects, Channel.NotificationType notificationType) {
+		for(JsonElement notificationElement : objects) {
+			if(notificationElement.isJsonObject()) {
+				JsonObject notificationObject = (JsonObject) notificationElement;
+				TransportNotification notification = new TransportNotification(notificationObject, notificationType);
+				if(notificationObject.has("subscription")) {
+					String channelIdentifier = notificationObject.get("subscription").getAsString();
+					notifyChannel(channelIdentifier, notification);
 				} else {
-					Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
-					if (channel != null) channel.processNotification(notification);
-					else {
-						TelepatLogger.error("No local channel instance available");
-						channel = new Channel(channelIdentifier);
-						channel.processNotification(notification);
+					TelepatLogger.log("V2 notification format detected");
+					if(notificationObject.has("subscriptions")) {
+						JsonArray affectedChannels = notificationObject.getAsJsonArray("subscriptions");
+						for(JsonElement element : affectedChannels) {
+							if(element.isJsonPrimitive()) {
+								String channelIdentifier = element.getAsString();
+								notifyChannel(channelIdentifier, notification);
+							}
+						}
 					}
 				}
 			}
 		}
 	}
+
+	private void notifyChannel(String channelIdentifier, TransportNotification notification) {
+		if (channelIdentifier.endsWith(":context")) {
+			Telepat.getInstance().fireContextUpdate(notification);
+		} else {
+			Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);
+			if (channel != null) channel.processNotification(notification);
+			else {
+				TelepatLogger.error("No local channel instance available");
+				channel = new Channel(channelIdentifier);
+				channel.processNotification(notification);
+			}
+		}
+	}
+
 }
