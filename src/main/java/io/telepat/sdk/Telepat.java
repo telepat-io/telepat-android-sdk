@@ -124,6 +124,13 @@ public final class Telepat
      */
 	public OctopusApi getAPIInstance() { return apiClient; }
 
+	public void emptyDB(Context ctx) {
+		if(internalDB == null) {
+			internalDB = new TelepatSnappyDb(ctx);
+		}
+		internalDB.empty();
+	}
+
 	public void initialize(Context context,
 						   final String telepatEndpoint,
 						   final String clientApiKey,
