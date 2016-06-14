@@ -22,7 +22,7 @@ You can easily add the Cast plugin as a Maven dependency:
             }
             }
             dependencies {
-            compile 'io.telepat:telepat-android-sdk:0.4.0.1'
+            compile 'io.telepat:telepat-android-sdk:0.4.0.2'
             }
 
 * * *
