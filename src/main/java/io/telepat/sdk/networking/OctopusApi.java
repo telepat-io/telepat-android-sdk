@@ -181,4 +181,16 @@ public interface OctopusApi {
 
     @POST("/email")
     void sendEmail(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
+
+    @POST("/til/append")
+    void appendToIndexedList(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
+
+    @POST("/til/get")
+    void checkIndexedListMembers(@Body Map<String, Object> body, Callback<GenericApiResponse> cb);
+
+    @POST("/til/removeList")
+    void deleteIndexedList(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
+
+    @POST("/til/removeMember")
+    void removeFromIndexedList(@Body Map<String, String> body, Callback<GenericApiResponse> cb);
 }
