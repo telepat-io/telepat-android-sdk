@@ -124,6 +124,7 @@ public final class Telepat
      */
 	public OctopusApi getAPIInstance() { return apiClient; }
 
+	@SuppressWarnings("unused")
 	public void emptyDB(Context ctx) {
 		if(internalDB == null) {
 			internalDB = new TelepatSnappyDb(ctx);
@@ -150,9 +151,9 @@ public final class Telepat
 		}
 
 		requestContexts();
-		String registrationId = (String) Telepat.getInstance()
-				.getDBInstance()
-				.getOperationsData(GcmRegistrar.PROPERTY_REG_ID, "", String.class);
+//		String registrationId = (String) Telepat.getInstance()
+//				.getDBInstance()
+//				.getOperationsData(GcmRegistrar.PROPERTY_REG_ID, "", String.class);
 		TelepatLogger.log("Initialized Telepat Android SDK version " + BuildConfig.VERSION_NAME);
 	}
 
@@ -160,6 +161,7 @@ public final class Telepat
      * Close the current Telepat instance. You should reinitialize the Telepat SDK before doing
      * additional work.
      */
+	@SuppressWarnings("unused")
 	public void destroy() {
 		internalDB.close();
 	}
@@ -284,6 +286,7 @@ public final class Telepat
 	 * @param fbToken A Facebook OAUTH token
 	 */
 	@Deprecated
+	@SuppressWarnings("unused")
 	public void register(final String fbToken, final TelepatRequestListener loginListener) {
 		registerFacebookUser(fbToken, loginListener);
 	}
@@ -292,6 +295,7 @@ public final class Telepat
 	 * Send a Telepat Sync API call for registering a user with the Facebook auth provider
 	 * @param fbToken A Facebook OAUTH token
 	 */
+	@SuppressWarnings("unused")
 	public void registerFacebookUser(final String fbToken, final TelepatRequestListener loginListener)
 	{
 		internalDB.setOperationsData(TelepatConstants.FB_TOKEN_KEY, fbToken);
@@ -360,6 +364,7 @@ public final class Telepat
 	 * @param callbackUrl An optional deep link for redirecting the user back into the app after confirming his email address
 	 * @param listener A callback for success and error events
 	 */
+	@SuppressWarnings("unused")
 	public void createUser(final String email, final String password, final String name, final String callbackUrl, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
 		if(email!=null && password!=null && name!=null) {
 			HashMap<String, String> userHash = new HashMap<>();
@@ -390,10 +395,12 @@ public final class Telepat
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public void createUser(final String email, final String password, final String name, final HashMap<String, String> additionalMetadata, final UserCreateListener listener) {
 		createUser(email, password, name, null, additionalMetadata, listener);
 }
 
+	@SuppressWarnings("unused")
 	public void createUser(final String email, final String password, final String name, final UserCreateListener listener) {
 		createUser(email, password, name, null, listener);
 	}
@@ -413,6 +420,7 @@ public final class Telepat
 		);
 	}
 
+	@SuppressWarnings("unused")
 	public void loginWithUsername(final String email,
 								  final String password,
 								  final TelepatRequestListener listener) {
@@ -427,6 +435,7 @@ public final class Telepat
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public void loginWithFacebook(final String fbToken, final String existingUsername, final TelepatRequestListener loginListener) {
 		apiClient.loginFacebook(
 				new RegisterFacebookUserRequest(fbToken, existingUsername).getParams(),
@@ -434,10 +443,12 @@ public final class Telepat
 		);
 	}
 
+	@SuppressWarnings("unused")
 	public void loginWithFacebook(final String fbToken, final TelepatRequestListener loginListener) {
 		loginWithFacebook(fbToken, null, loginListener);
 	}
 
+	@SuppressWarnings("unused")
 	public void loginWithTwitter(final String oauthToken,
 								 final String oauthTokenSecret,
 								 final TelepatRequestListener loginListener) {
@@ -449,6 +460,7 @@ public final class Telepat
     /**
      * Send a Telepat Sync API call for logging out the current user. The method will return null if there is no currently logged in user.
      */
+	@SuppressWarnings("unused")
 	public void logout()
 	{
 		apiClient.logout(new Callback<HashMap<String, Object>>() {
@@ -469,6 +481,7 @@ public final class Telepat
 	 * Get information about the currently logged in user
 	 * @return a HashMap of the user data.
 	 */
+	@SuppressWarnings("unused")
 	public Map<String, Object> getLoggedInUserInfo() {
 		Object userData = internalDB.getOperationsData(TelepatConstants.CURRENT_USER_DATA, null, HashMap.class);
 		if(userData instanceof HashMap) {
@@ -483,6 +496,7 @@ public final class Telepat
 	/**
 	 * Request a password reset email
 	 */
+	@SuppressWarnings("unused")
 	public void requestPasswordResetEmail(String username, String callbackUrl, final TelepatRequestListener listener) {
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("username", username);
@@ -507,6 +521,7 @@ public final class Telepat
 		});
 	}
 
+	@SuppressWarnings("unused")
 	public void requestPasswordResetEmail(String username, final TelepatRequestListener listener) {
 		requestPasswordResetEmail(username, null, listener);
 	}
@@ -518,6 +533,7 @@ public final class Telepat
 	 * @param newPassword
 	 * @param listener
 	 */
+	@SuppressWarnings("unused")
 	public void resetPassword(String userId, String token, String newPassword, final TelepatRequestListener listener) {
 		HashMap<String, String> requestBody = new HashMap<>();
 		requestBody.put("user_id", userId);
@@ -538,10 +554,12 @@ public final class Telepat
 		});
 	}
 
+	@SuppressWarnings("unused")
 	public void getUserMetadata(Callback<GenericApiResponse> callback) {
 		apiClient.getUserMetadata(callback);
 	}
 
+	@SuppressWarnings("unused")
 	public void updateUserMetadata(List<UserUpdatePatch> patches, String metadataId, final TelepatRequestListener listener) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		ArrayList<HashMap<String, Object>> jsonPatches = new ArrayList<>();
@@ -566,6 +584,7 @@ public final class Telepat
 		});
 	}
 
+	@SuppressWarnings("unused")
 	public void updateUserMetadata(UserUpdatePatch patch, String metadataId, final TelepatRequestListener listener) {
 		ArrayList<UserUpdatePatch> patches = new ArrayList<>();
 		patches.add(patch);
@@ -582,6 +601,7 @@ public final class Telepat
      *             extend the TelepatBaseModel class)
      * @return a <code>Channel</code> object with the specified characteristics
      */
+	@SuppressWarnings("unused")
 	public Channel subscribe(TelepatContext context, String modelName, OnChannelEventListener listener, Class type) {
 		Channel channel = new Channel.Builder().
                 setContext(context).
@@ -610,6 +630,7 @@ public final class Telepat
 	 * @return a <code>Channel</code> object with the specified characteristics
 	 */
 	@Deprecated
+	@SuppressWarnings("unused")
 	public Channel subscribe(TelepatContext context,
 							 String modelName,
 							 String objectId,
@@ -642,6 +663,7 @@ public final class Telepat
 		channel.subscribe();
 	}
 
+	@SuppressWarnings("unused")
 	public void count(TelepatContext context,
 					  String modelName,
 					  String objectId,
@@ -723,6 +745,7 @@ public final class Telepat
      * early as possible, before registering the device with the Sync API.
      * @param udid the desired UDID
      */
+	@SuppressWarnings("unused")
 	public void setDeviceLocalIdentifier(String udid) {
 		internalDB.setOperationsData(TelepatConstants.LOCAL_UDID_KEY, udid);
 	}
@@ -731,11 +754,12 @@ public final class Telepat
 		this.contextUpdateListeners.add(listener);
 	}
 
+	@SuppressWarnings("unused")
 	public void removeContextUpdateListener(ContextUpdateListener listener) {
 		this.contextUpdateListeners.remove(listener);
 	}
 
-
+	@SuppressWarnings("unused")
 	public void updateUser(final ArrayList<UserUpdatePatch> userChanges, String userId, final TelepatRequestListener listener) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		ArrayList<HashMap<String, Object>> jsonPatches = new ArrayList<>();
@@ -860,6 +884,7 @@ public final class Telepat
 		});
 	}
 
+	@SuppressWarnings("unused")
 	public void sendEmail(List<String> recipients, String from, String fromName, String subject, String body, Callback<GenericApiResponse> callback) {
 		HashMap<String, Object> requestBody = new HashMap<>();
 		if(recipients==null || from==null || body==null) {
@@ -879,15 +904,51 @@ public final class Telepat
 		apiClient.sendEmail(requestBody, callback);
 	}
 
+	@SuppressWarnings("unused")
 	public void me(Callback<GenericApiResponse> callback) {
 		getAPIInstance().me(callback);
 	}
 
+	@SuppressWarnings("unused")
 	public void get(String userId, Callback<GenericApiResponse> callback) {
 		getAPIInstance().get(userId, callback);
 	}
 
 	public String getAppId() {
 		return appId;
+	}
+
+	@SuppressWarnings("unused")
+	public void appendToIndexedList(Map<String, String> objectToIndex, String listName, String indexedPropertyName, Callback<GenericApiResponse> callback) {
+		HashMap<String, Object> appendRequestBody = new HashMap<>();
+		appendRequestBody.put("listName", listName);
+		appendRequestBody.put("indexedProperty", indexedPropertyName);
+		appendRequestBody.put("memberObject", objectToIndex);
+		getAPIInstance().appendToIndexedList(appendRequestBody, callback);
+	}
+
+	@SuppressWarnings("unused")
+	public void objectsExistsInIndex(List<String> memberPropertyValues, String listName, String indexedPropertyName, Callback<GenericApiResponse> callback) {
+		HashMap<String, Object> requestBody = new HashMap<>();
+		requestBody.put("listName", listName);
+		requestBody.put("indexedProperty", indexedPropertyName);
+		requestBody.put("members", memberPropertyValues);
+		getAPIInstance().checkIndexedListMembers(requestBody, callback);
+	}
+
+	@SuppressWarnings("unused")
+	public void deleteIndexedList(String listName, Callback<GenericApiResponse> callback) {
+		HashMap<String, String> requestBody = new HashMap<>();
+		requestBody.put("listName", listName);
+		getAPIInstance().deleteIndexedList(requestBody, callback);
+	}
+
+	@SuppressWarnings("unused")
+	public void removeMemberFromIndexedList(String memberPropertyValue, String listName, String indexedPropertyName, Callback<GenericApiResponse> callback) {
+		HashMap<String, String> requestBody = new HashMap<>();
+		requestBody.put("listName", listName);
+		requestBody.put("indexedProperty", indexedPropertyName);
+		requestBody.put("member", memberPropertyValue);
+		getAPIInstance().removeFromIndexedList(requestBody, callback);
 	}
 }
