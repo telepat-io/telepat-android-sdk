@@ -166,15 +166,17 @@ public class Channel implements PropertyChangeListener {
 
 					@Override
 					public void failure(RetrofitError error) {
-						if (error.getMessage().startsWith("409")) {
+						if (error!=null && error.getResponse()!=null && error.getResponse().getStatus()==409) {
 							TelepatLogger.log("There is an already active subscription for this channel.");
 							if (Channel.this.mChannelEventListener != null) {
 								mChannelEventListener.onSubscribeComplete();
 							}
-						} else if (error.getMessage().startsWith("401")) {
+						} else if (error!=null && error.getResponse()!=null && error.getResponse().getStatus()==401) {
 							TelepatLogger.log("Not logged in.");
-						} else {
+						} else if(error!=null && error.getMessage()!=null){
 							TelepatLogger.log("Error subscribing: " + error.getMessage());
+						} else {
+							TelepatLogger.log("Error subscribing with unknown error");
 						}
 						if (mChannelEventListener != null) {
 							mChannelEventListener.onError(error.getResponse().getStatus(), error.getMessage());
