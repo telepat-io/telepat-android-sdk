@@ -196,14 +196,14 @@ public final class Telepat
 		String udid = (String) internalDB.getOperationsData(TelepatConstants.UDID_KEY,
 															"",
 															String.class);
-		if(!udid.isEmpty() && !shouldUpdateBackend) {
+		if(!udid.isEmpty()) {
 			for (ContextUpdateListener listener : Telepat.this.contextUpdateListeners) {
 				listener.deviceRegisterSuccess();
 			}
 			return;
 		}
 
-		if(udid.isEmpty()) {
+		if(udid.isEmpty() || shouldUpdateBackend) {
 			RegisterDeviceRequest request = new RegisterDeviceRequest(regId);
 			apiClient.registerDevice(request.getParams(), new Callback<GenericApiResponse>() {
 				@Override
