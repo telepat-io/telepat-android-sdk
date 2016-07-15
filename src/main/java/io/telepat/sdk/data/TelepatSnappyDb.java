@@ -140,7 +140,9 @@ public class TelepatSnappyDb implements TelepatInternalDB {
                 TelepatBaseModel obj = (TelepatBaseModel)snappyDb.get(key, type);
                 if(obj == null || obj.getId() == null) continue;
                 objects.add(obj);
-            } catch (SnappydbException ignored) { }
+            } catch (SnappydbException exception) {
+                deleteChannelObjects(channelIdentifier);
+            }
         }
         Collections.sort(objects, new Comparator<TelepatBaseModel>() {
             @Override
