@@ -536,6 +536,8 @@ public class Channel implements PropertyChangeListener {
 						propertyValue = notification.getNotificationValue().getAsJsonArray().toString();
 					}
 
+					dbInstance.persistObject(getSubscriptionIdentifier(), updatedObject);
+
 					TelepatLogger.log("Pushing changed value to listeners: "+propertyValue);
 					if(mChannelEventListener != null) {
 						updatedObject.addPropertyChangeListener(this);
@@ -543,7 +545,6 @@ public class Channel implements PropertyChangeListener {
 								propertyName,
 								propertyValue);
 					}
-					dbInstance.persistObject(getSubscriptionIdentifier(), updatedObject);
 				}
 				break;
 			case ObjectDeleted:
