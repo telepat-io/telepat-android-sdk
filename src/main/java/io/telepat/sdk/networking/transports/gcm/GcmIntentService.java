@@ -76,7 +76,7 @@ public class GcmIntentService extends IntentService
 	}
 
 	private void notifyChannel(String channelIdentifier, TransportNotification notification) {
-		if (channelIdentifier.endsWith(":context")) {
+		if (channelIdentifier.contains(":context") && (channelIdentifier.length() - channelIdentifier.replace(":", "").length() == 3) ) {
 			Telepat.getInstance().fireContextUpdate(notification);
 		} else {
 			Channel channel = Telepat.getInstance().getSubscribedChannel(channelIdentifier);

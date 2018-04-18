@@ -6,13 +6,13 @@ version '0.4.0.2'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
         versionCode 46
-        versionName "0.4.0.2"
+        versionName "0.4.2"
     }
 
     //noinspection GroovyAssignabilityCheck

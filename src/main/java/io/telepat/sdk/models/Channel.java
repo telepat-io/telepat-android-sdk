@@ -199,6 +199,9 @@ public class Channel implements PropertyChangeListener {
 
 	public void count(final TelepatCountCallback callback, AggregationType aggregationType, String aggregationField) {
 		HashMap<String, Object> countRequestBody = getSubscribingRequestBody();
+
+		countRequestBody.remove("offset");
+		countRequestBody.remove("limit");
 		if(aggregationType != null && aggregationField != null) {
 			HashMap<String, Object> aggregationHash = new HashMap<>();
 			HashMap<String, String> aggregationFieldHash = new HashMap<>();
